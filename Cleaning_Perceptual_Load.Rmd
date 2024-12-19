@@ -1,0 +1,621 @@
+---
+title: "Cleaning_Perceptual_Load"
+author: "Lu-K Gautier"
+date: '2022-11-14'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+cat("\014") # clear console
+rm(list=ls()) # clear workspace
+set.seed(42) # set overall random seed for reproducibility
+```
+
+
+
+```{r packages}
+list.of.packages <- c("dplyr", "emmeans", "tidyverse", "readr", "psych", "lmerTest", "rsq", "questionr", "TOSTER", "sjPlot")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+invisible(lapply(list.of.packages, require, character.only = TRUE))
+
+remove(list.of.packages, new.packages)
+
+```
+
+ # Renaming variables
+ 
+- Participant: Name of the participant data
+
+- Chooserandom_Instruction: Instructions that are given to participants considering the main task of counting the bounces made by White squares (Chooserandom_Instruction = 1) or Black squares (Chooserandom_Instruction = 2)
+
+- Chooserandom_Condition: 
+
+
+
+```{r read}
+df <- read_csv("Data/data.csv")
+
+tmp <- df
+
+names(tmp)[1] <- "Participant"
+names(tmp)[2] <- "Chooserandom_Instruction"
+names(tmp)[3] <- "Chooserandom_Condition"
+names(tmp)[4] <- "Trial1_C1"
+names(tmp)[5] <- "Trial2_C1"
+names(tmp)[6] <- "Trial3_C1"
+names(tmp)[7] <- "Trial_Critic_C1"
+names(tmp)[8] <- "IB_Critic_C1"
+names(tmp)[9] <- "Feature_Critic_C1"
+names(tmp)[10] <- "Color_Critic_C1"
+names(tmp)[11] <- "Motion_Critic_C1"
+names(tmp)[12] <- "Trial4_C1"
+names(tmp)[13] <- "Trial_Divided_C1"
+names(tmp)[14] <- "IB_Divided_C1"
+names(tmp)[15] <- "Feature_Divided_C1"
+names(tmp)[16] <- "Color_Divided_C1"
+names(tmp)[17] <- "Motion_Divided_C1"
+names(tmp)[18] <- "IB_Full_C1"
+names(tmp)[19] <- "Feature_Full_C1"
+names(tmp)[20] <- "Color_Full_C1"
+names(tmp)[21] <- "Motion_Full_C1"
+
+
+names(tmp)[22] <- "Trial1_C2"
+names(tmp)[23] <- "Trial2_C2"
+names(tmp)[24] <- "Trial3_C2"
+names(tmp)[25] <- "Trial_Critic_C2"
+names(tmp)[26] <- "IB_Critic_C2"
+names(tmp)[27] <- "Feature_Critic_C2"
+names(tmp)[28] <- "Color_Critic_C2"
+names(tmp)[29] <- "Motion_Critic_C2"
+names(tmp)[30] <- "Trial4_C2"
+names(tmp)[31] <- "Trial_Divided_C2"
+names(tmp)[32] <- "IB_Divided_C2"
+names(tmp)[33] <- "Feature_Divided_C2"
+names(tmp)[34] <- "Color_Divided_C2"
+names(tmp)[35] <- "Motion_Divided_C2"
+names(tmp)[36] <- "IB_Full_C2"
+names(tmp)[37] <- "Feature_Full_C2"
+names(tmp)[38] <- "Color_Full_C2"
+names(tmp)[39] <- "Motion_Full_C2"
+
+
+names(tmp)[40] <- "Trial1_C3"
+names(tmp)[41] <- "Trial2_C3"
+names(tmp)[42] <- "Trial3_C3"
+names(tmp)[43] <- "Trial_Critic_C3"
+names(tmp)[44] <- "IB_Critic_C3"
+names(tmp)[45] <- "Feature_Critic_C3"
+names(tmp)[46] <- "Color_Critic_C3"
+names(tmp)[47] <- "Motion_Critic_C3"
+names(tmp)[48] <- "Trial4_C3"
+names(tmp)[49] <- "Trial_Divided_C3"
+names(tmp)[50] <- "IB_Divided_C3"
+names(tmp)[51] <- "Feature_Divided_C3"
+names(tmp)[52] <- "Color_Divided_C3"
+names(tmp)[53] <- "Motion_Divided_C3"
+names(tmp)[54] <- "IB_Full_C3"
+names(tmp)[55] <- "Feature_Full_C3"
+names(tmp)[56] <- "Color_Full_C3"
+names(tmp)[57] <- "Motion_Full_C3"
+
+names(tmp)[58] <- "Trial1_C4_Incong"
+names(tmp)[59] <- "Trial2_C4_Incong"
+names(tmp)[60] <- "Trial3_C4_Incong"
+names(tmp)[61] <- "Trial_Critic_C4_Incong"
+names(tmp)[62] <- "IB_Critic_C4_Incong"
+names(tmp)[63] <- "Feature_Critic_C4_Incong"
+names(tmp)[64] <- "Color_Critic_C4_Incong"
+names(tmp)[65] <- "Motion_Critic_C4_Incong"
+names(tmp)[66] <- "Trial4_C4_Incong"
+names(tmp)[67] <- "Trial_Divided_C4_Incong"
+names(tmp)[68] <- "IB_Divided_C4_Incong"
+names(tmp)[69] <- "Feature_Divided_C4_Incong"
+names(tmp)[70] <- "Color_Divided_C4_Incong"
+names(tmp)[71] <- "Motion_Divided_C4_Incong"
+names(tmp)[72] <- "IB_Full_C4_Incong"
+names(tmp)[73] <- "Feature_Full_C4_Incong"
+names(tmp)[74] <- "Color_Full_C4_Incong"
+names(tmp)[75] <- "Motion_Full_C4_Incong"
+
+
+names(tmp)[76] <- "Trial1_C4_Cong"
+names(tmp)[77] <- "Trial2_C4_Cong"
+names(tmp)[78] <- "Trial3_C4_Cong"
+names(tmp)[79] <- "Trial_Critic_C4_Cong"
+names(tmp)[80] <- "IB_Critic_C4_Cong"
+names(tmp)[81] <- "Feature_Critic_C4_Cong"
+names(tmp)[82] <- "Color_Critic_C4_Cong"
+names(tmp)[83] <- "Motion_Critic_C4_Cong"
+names(tmp)[84] <- "Trial4_C4_Cong"
+names(tmp)[85] <- "Trial_Divided_C4_Cong"
+names(tmp)[86] <- "IB_Divided_C4_Cong"
+names(tmp)[87] <- "Feature_Divided_C4_Cong"
+names(tmp)[88] <- "Color_Divided_C4_Cong"
+names(tmp)[89] <- "Motion_Divided_C4_Cong"
+names(tmp)[90] <- "IB_Full_C4_Cong"
+names(tmp)[91] <- "Feature_Full_C4_Cong"
+names(tmp)[92] <- "Color_Full_C4_Cong"
+names(tmp)[93] <- "Motion_Full_C4_Cong"
+
+
+names(tmp)[94] <- "Trial1_C5"
+names(tmp)[95] <- "Trial2_C5"
+names(tmp)[96] <- "Trial3_C5"
+names(tmp)[97] <- "Trial_Critic_C5"
+names(tmp)[98] <- "IB_Critic_C5"
+names(tmp)[99] <- "Feature_Critic_C5"
+names(tmp)[100] <- "Color_Critic_C5"
+names(tmp)[101] <- "Motion_Critic_C5"
+names(tmp)[102] <- "Trial4_C5"
+names(tmp)[103] <- "Trial_Divided_C5"
+names(tmp)[104] <- "IB_Divided_C5"
+names(tmp)[105] <- "Feature_Divided_C5"
+names(tmp)[106] <- "Color_Divided_C5"
+names(tmp)[107] <- "Motion_Divided_C5"
+names(tmp)[108] <- "IB_Full_C5"
+names(tmp)[109] <- "Feature_Full_C5"
+names(tmp)[110] <- "Color_Full_C5"
+names(tmp)[111] <- "Motion_Full_C5"
+
+
+names(tmp)[112] <- "Trial1_C6"
+names(tmp)[113] <- "Trial2_C6"
+names(tmp)[114] <- "Trial3_C6"
+names(tmp)[115] <- "Trial_Critic_C6"
+names(tmp)[116] <- "IB_Critic_C6"
+names(tmp)[117] <- "Feature_Critic_C6"
+names(tmp)[118] <- "Color_Critic_C6"
+names(tmp)[119] <- "Motion_Critic_C6"
+names(tmp)[120] <- "Trial4_C6"
+names(tmp)[121] <- "Trial_Divided_C6"
+names(tmp)[122] <- "IB_Divided_C6"
+names(tmp)[123] <- "Feature_Divided_C6"
+names(tmp)[124] <- "Color_Divided_C6"
+names(tmp)[125] <- "Motion_Divided_C6"
+names(tmp)[126] <- "IB_Full_C6"
+names(tmp)[127] <- "Feature_Full_C6"
+names(tmp)[128] <- "Color_Full_C6"
+names(tmp)[129] <- "Motion_Full_C6"
+
+
+names(tmp)[130] <- "Trial1_C7"
+names(tmp)[131] <- "Trial2_C7"
+names(tmp)[132] <- "Trial3_C7"
+names(tmp)[133] <- "Trial_Critic_C7"
+names(tmp)[134] <- "IB_Critic_C7"
+names(tmp)[135] <- "Feature_Critic_C7"
+names(tmp)[136] <- "Color_Critic_C7"
+names(tmp)[137] <- "Motion_Critic_C7"
+names(tmp)[138] <- "Trial4_C7"
+names(tmp)[139] <- "Trial_Divided_C7"
+names(tmp)[140] <- "IB_Divided_C7"
+names(tmp)[141] <- "Feature_Divided_C7"
+names(tmp)[142] <- "Color_Divided_C7"
+names(tmp)[143] <- "Motion_Divided_C7"
+names(tmp)[144] <- "IB_Full_C7"
+names(tmp)[145] <- "Feature_Full_C7"
+names(tmp)[146] <- "Color_Full_C7"
+names(tmp)[147] <- "Motion_Full_C7"
+
+
+names(tmp)[148] <- "Trial1_C8"
+names(tmp)[149] <- "Trial2_C8"
+names(tmp)[150] <- "Trial3_C8"
+names(tmp)[151] <- "Trial_Critic_C8"
+names(tmp)[152] <- "IB_Critic_C8"
+names(tmp)[153] <- "Feature_Critic_C8"
+names(tmp)[154] <- "Color_Critic_C8"
+names(tmp)[155] <- "Motion_Critic_C8"
+names(tmp)[156] <- "Trial4_C8"
+names(tmp)[157] <- "Trial_Divided_C8"
+names(tmp)[158] <- "IB_Divided_C8"
+names(tmp)[159] <- "Feature_Divided_C8"
+names(tmp)[160] <- "Color_Divided_C8"
+names(tmp)[161] <- "Motion_Divided_C8"
+names(tmp)[162] <- "IB_Full_C8"
+names(tmp)[163] <- "Feature_Full_C8"
+names(tmp)[164] <- "Color_Full_C8"
+names(tmp)[165] <- "Motion_Full_C8"
+
+
+
+names(tmp)[166] <- "Angry"
+names(tmp)[167] <- "Anxious"
+names(tmp)[168] <- "Happy"
+names(tmp)[169] <- "Depressed"
+names(tmp)[170] <- "Tense"
+names(tmp)[171] <- "Calm"
+names(tmp)[172] <- "Stressed"
+names(tmp)[173] <- "Nervous"
+names(tmp)[174] <- "VisionPb"
+names(tmp)[175] <- "KnewExperiment"
+names(tmp)[176] <- "KnewTask"
+names(tmp)[177] <- "KnewIB"
+names(tmp)[178] <- "Age"
+names(tmp)[179] <- "Gender"
+names(tmp)[180] <- "PROLIFIC_PID"
+names(tmp)[181] <- "STUDY_ID"
+names(tmp)[182] <- "SESSIOn_ID"
+names(tmp)[183] <- "TIME_Start"
+names(tmp)[184] <- "TIME_End"
+names(tmp)[185] <- "TIME_Total"
+
+df <- tmp
+
+rm(list=setdiff(ls(), c("df"))) # clear workspace except the data frame
+
+```
+
+
+ # Merge all these conditions (n=9) into one
+ 
+
+```{r Merge}
+
+tmp <- df
+
+# Add the function coalesce2
+coalesce2 <- function(...) {
+  apply(cbind(...), 1, function(x) {
+          x[which(!is.na(x))[1]]
+        })
+}
+
+ # Build a unique column that contain the number of bounce counting in Trial 1 for all conditions
+tmp <- tmp %>% 
+  mutate(Trial1 = case_when(Chooserandom_Condition == "1" ~ Trial1_C1,
+                            Chooserandom_Condition == "2" ~ Trial1_C2,
+                            Chooserandom_Condition == "3" ~ Trial1_C3,
+                            Chooserandom_Condition == "41" ~ Trial1_C4_Incong,
+                            Chooserandom_Condition == "42" ~ Trial1_C4_Cong,
+                            Chooserandom_Condition == "5" ~ Trial1_C5,
+                            Chooserandom_Condition == "6" ~ Trial1_C6,
+                            Chooserandom_Condition == "7" ~ Trial1_C7,
+                            Chooserandom_Condition == "8" ~ Trial1_C8))
+
+
+ # Build a unique column that contain the number of bounce counting in Trial 2 for all conditions
+tmp <- tmp %>% 
+  mutate(Trial2 = case_when(Chooserandom_Condition == "1" ~ Trial2_C1,
+                            Chooserandom_Condition == "2" ~ Trial2_C2,
+                            Chooserandom_Condition == "3" ~ Trial2_C3,
+                            Chooserandom_Condition == "41" ~ Trial2_C4_Incong,
+                            Chooserandom_Condition == "42" ~ Trial2_C4_Cong,
+                            Chooserandom_Condition == "5" ~ Trial2_C5,
+                            Chooserandom_Condition == "6" ~ Trial2_C6,
+                            Chooserandom_Condition == "7" ~ Trial2_C7,
+                            Chooserandom_Condition == "8" ~ Trial2_C8))
+
+
+ # Build a unique column that contain the number of bounce counting in Trial 3 for all conditions
+tmp <- tmp %>% 
+  mutate(Trial3 = case_when(Chooserandom_Condition == "1" ~ Trial3_C1,
+                            Chooserandom_Condition == "2" ~ Trial3_C2,
+                            Chooserandom_Condition == "3" ~ Trial3_C3,
+                            Chooserandom_Condition == "41" ~ Trial3_C4_Incong,
+                            Chooserandom_Condition == "42" ~ Trial3_C4_Cong,
+                            Chooserandom_Condition == "5" ~ Trial3_C5,
+                            Chooserandom_Condition == "6" ~ Trial3_C6,
+                            Chooserandom_Condition == "7" ~ Trial3_C7,
+                            Chooserandom_Condition == "8" ~ Trial3_C8))
+
+ # Build a unique column that contain the number of bounce counting in Trial 4 for all conditions
+tmp <- tmp %>% 
+  mutate(Trial4 = case_when(Chooserandom_Condition == "1" ~ Trial4_C1,
+                            Chooserandom_Condition == "2" ~ Trial4_C2,
+                            Chooserandom_Condition == "3" ~ Trial4_C3,
+                            Chooserandom_Condition == "41" ~ Trial4_C4_Incong,
+                            Chooserandom_Condition == "42" ~ Trial4_C4_Cong,
+                            Chooserandom_Condition == "5" ~ Trial4_C5,
+                            Chooserandom_Condition == "6" ~ Trial4_C6,
+                            Chooserandom_Condition == "7" ~ Trial4_C7,
+                            Chooserandom_Condition == "8" ~ Trial4_C8))
+
+
+ # Build a unique column that contain the number of bounce counting in The critical trial for all conditions
+tmp$Trial_Critic <- coalesce2(tmp$Trial_Critic_C1, 
+                              tmp$Trial_Critic_C2, 
+                              tmp$Trial_Critic_C3, 
+                              tmp$Trial_Critic_C4_Incong, 
+                              tmp$Trial_Critic_C4_Cong, 
+                              tmp$Trial_Critic_C5, 
+                              tmp$Trial_Critic_C6, 
+                              tmp$Trial_Critic_C7, 
+                              tmp$Trial_Critic_C8)
+
+
+ # Build a unique column that contain the number of bounce counting in The Divided attention trial for all conditions
+tmp$Trial_Divided <- coalesce2(tmp$Trial_Divided_C1, 
+                              tmp$Trial_Divided_C2, 
+                              tmp$Trial_Divided_C3, 
+                              tmp$Trial_Divided_C4_Incong, 
+                              tmp$Trial_Divided_C4_Cong, 
+                              tmp$Trial_Divided_C5, 
+                              tmp$Trial_Divided_C6, 
+                              tmp$Trial_Divided_C7, 
+                              tmp$Trial_Divided_C8)
+
+
+ # Build a unique column that contain the detection of the unexpected element in the critical trial for all conditions
+tmp$IB_Critic <- coalesce2(tmp$IB_Critic_C1, 
+                           tmp$IB_Critic_C2, 
+                           tmp$IB_Critic_C3, 
+                           tmp$IB_Critic_C4_Incong, 
+                           tmp$IB_Critic_C4_Cong, 
+                           tmp$IB_Critic_C5, 
+                           tmp$IB_Critic_C6, 
+                           tmp$IB_Critic_C7, 
+                           tmp$IB_Critic_C8)
+
+
+ # Build a unique column that contain the detection of the unexpected element in the divided attention trial for all conditions
+tmp$IB_Divided <- coalesce2(tmp$IB_Divided_C1, 
+                            tmp$IB_Divided_C2, 
+                            tmp$IB_Divided_C3, 
+                            tmp$IB_Divided_C4_Incong, 
+                            tmp$IB_Divided_C4_Cong, 
+                            tmp$IB_Divided_C5, 
+                            tmp$IB_Divided_C6, 
+                            tmp$IB_Divided_C7, 
+                            tmp$IB_Divided_C8)
+
+
+ # Build a unique column that contain the detection of the unexpected element in the full attention trial for all conditions
+tmp$IB_Full <- coalesce2(tmp$IB_Full_C1, 
+                         tmp$IB_Full_C2, 
+                         tmp$IB_Full_C3, 
+                         tmp$IB_Full_C4_Incong, 
+                         tmp$IB_Full_C4_Cong, 
+                         tmp$IB_Full_C5, 
+                         tmp$IB_Full_C6, 
+                         tmp$IB_Full_C7, 
+                         tmp$IB_Full_C8)
+
+
+ # Build a unique column that contain the selected feature of the unexpected element in the critical trial for all conditions
+tmp$Feature_Critic <- coalesce2(tmp$Feature_Critic_C1, 
+                                tmp$Feature_Critic_C2, 
+                                tmp$Feature_Critic_C3, 
+                                tmp$Feature_Critic_C4_Incong, 
+                                tmp$Feature_Critic_C4_Cong, 
+                                tmp$Feature_Critic_C5, 
+                                tmp$Feature_Critic_C6, 
+                                tmp$Feature_Critic_C7, 
+                                tmp$Feature_Critic_C8)
+
+ # Build a unique column that contain the selected color of the unexpected element in the critical trial for all conditions
+tmp$Color_Critic <- coalesce2(tmp$Color_Critic_C1, 
+                              tmp$Color_Critic_C2, 
+                              tmp$Color_Critic_C3, 
+                              tmp$Color_Critic_C4_Incong, 
+                              tmp$Color_Critic_C4_Cong, 
+                              tmp$Color_Critic_C5, 
+                              tmp$Color_Critic_C6, 
+                              tmp$Color_Critic_C7, 
+                              tmp$Color_Critic_C8)
+
+ # Build a unique column that contain the selected motion of the unexpected element in the critical trial for all conditions
+tmp$Motion_Critic <- coalesce2(tmp$Motion_Critic_C1, 
+                               tmp$Motion_Critic_C2, 
+                               tmp$Motion_Critic_C3, 
+                               tmp$Motion_Critic_C4_Incong, 
+                               tmp$Motion_Critic_C4_Cong, 
+                               tmp$Motion_Critic_C5, 
+                               tmp$Motion_Critic_C6, 
+                               tmp$Motion_Critic_C7, 
+                               tmp$Motion_Critic_C8)
+
+
+ # Build a unique column that contain the selected feature of the unexpected element in the Divided attention trial for all conditions
+tmp$Feature_Divided <- coalesce2(tmp$Feature_Divided_C1, 
+                                 tmp$Feature_Divided_C2, 
+                                 tmp$Feature_Divided_C3, 
+                                 tmp$Feature_Divided_C4_Incong, 
+                                 tmp$Feature_Divided_C4_Cong, 
+                                 tmp$Feature_Divided_C5, 
+                                 tmp$Feature_Divided_C6, 
+                                 tmp$Feature_Divided_C7, 
+                                 tmp$Feature_Divided_C8)
+
+ # Build a unique column that contain the selected color of the unexpected element in the Divided attention trial for all conditions
+tmp$Color_Divided <- coalesce2(tmp$Color_Divided_C1, 
+                               tmp$Color_Divided_C2, 
+                               tmp$Color_Divided_C3, 
+                               tmp$Color_Divided_C4_Incong, 
+                               tmp$Color_Divided_C4_Cong, 
+                               tmp$Color_Divided_C5, 
+                               tmp$Color_Divided_C6, 
+                               tmp$Color_Divided_C7, 
+                               tmp$Color_Divided_C8)
+
+ # Build a unique column that contain the selected motion of the unexpected element in the Divided attention trial for all conditions
+tmp$Motion_Divided <- coalesce2(tmp$Motion_Divided_C1, 
+                                tmp$Motion_Divided_C2, 
+                                tmp$Motion_Divided_C3, 
+                                tmp$Motion_Divided_C4_Incong, 
+                                tmp$Motion_Divided_C4_Cong, 
+                                tmp$Motion_Divided_C5, 
+                                tmp$Motion_Divided_C6, 
+                                tmp$Motion_Divided_C7, 
+                                tmp$Motion_Divided_C8)
+
+
+ # Build a unique column that contain the selected feature of the unexpected element in the Full attention trial for all conditions
+tmp$Feature_Full <- coalesce2(tmp$Feature_Full_C1, 
+                              tmp$Feature_Full_C2, 
+                              tmp$Feature_Full_C3, 
+                              tmp$Feature_Full_C4_Incong, 
+                              tmp$Feature_Full_C4_Cong, 
+                              tmp$Feature_Full_C5, 
+                              tmp$Feature_Full_C6, 
+                              tmp$Feature_Full_C7, 
+                              tmp$Feature_Full_C8)
+
+ # Build a unique column that contain the selected color of the unexpected element in the Full attention trial for all conditions
+tmp$Color_Full <- coalesce2(tmp$Color_Full_C1, 
+                            tmp$Color_Full_C2, 
+                            tmp$Color_Full_C3, 
+                            tmp$Color_Full_C4_Incong, 
+                            tmp$Color_Full_C4_Cong, 
+                            tmp$Color_Full_C5, 
+                            tmp$Color_Full_C6, 
+                            tmp$Color_Full_C7, 
+                            tmp$Color_Full_C8)
+
+ # Build a unique column that contain the selected motion of the unexpected element in the Full attention trial for all conditions
+tmp$Motion_Full <- coalesce2(tmp$Motion_Full_C1, 
+                             tmp$Motion_Full_C2, 
+                             tmp$Motion_Full_C3, 
+                             tmp$Motion_Full_C4_Incong, 
+                             tmp$Motion_Full_C4_Cong, 
+                             tmp$Motion_Full_C5, 
+                             tmp$Motion_Full_C6, 
+                             tmp$Motion_Full_C7, 
+                             tmp$Motion_Full_C8)
+
+
+df <- tmp
+remove(tmp)
+
+```
+
+ # Remove old columns 
+(with lots of NA values)
+
+```{r}
+
+tmp <- df
+
+tmp <- tmp %>% 
+  mutate(response_id = row_number())
+
+tmp <- tmp %>% 
+  select(Participant:Chooserandom_Condition, Angry:Gender, Trial1:response_id)
+
+df <- tmp 
+remove(tmp)
+
+```
+
+ # Validity of noticing  
+Here, We want to check if participants tell they notice an extra-object stimulus only when they really see it. 
+For that, for participant who report seeing something on the critical trial, we check if they are able to report at least one caracteristic of this unexpected element (Feature, Color, Motion)
+
+```{r Noticing_Check}
+
+tmp <- df
+
+ # Check noticing validity on the Critical trial
+tmp <- tmp %>%
+  mutate(Noticing_Critic = case_when((IB_Critic == 1 & Chooserandom_Instruction == 1)&(Feature_Critic == 3 | Motion_Critic == 2 | Color_Critic == 4) ~ 1, 
+                                     (IB_Critic == 1 & Chooserandom_Instruction == 2)&(Feature_Critic == 3 | Motion_Critic == 2 | Color_Critic == 4) ~ 1,
+                                     TRUE ~ 0))
+
+
+ # Check noticing validity on the divided attention trial
+tmp <- tmp %>%
+  mutate(Noticing_Divided = case_when((IB_Divided == 1 & Chooserandom_Instruction == 1)&(Feature_Divided == 3 | Motion_Divided == 2 | Color_Divided == 4) ~ 1, 
+                                      (IB_Divided == 1 & Chooserandom_Instruction == 2)&(Feature_Divided == 3 | Motion_Divided == 2 | Color_Divided == 4) ~ 1,
+                                      TRUE ~ 0))
+
+
+ # Check noticing validity on the full attention trial
+tmp <- tmp %>%
+  mutate(Noticing_Full = case_when((IB_Full == 1 & Chooserandom_Instruction == 1)&(Feature_Full == 3 | Motion_Full == 2 | Color_Full == 4) ~ 1, 
+                                     (IB_Full == 1 & Chooserandom_Instruction == 2)&(Feature_Full == 3 | Motion_Full == 2 | Color_Full == 4) ~ 1,
+                                     TRUE ~ 0))
+
+warning("This checking make little differences in comparison to taking into account only the noticing self-report. It leads to an increasing in non-noticers number but it could be interesting to add some scripts in order to quantify this increasing")
+
+
+tmp <- tmp %>%
+  mutate(Chooserandom_Condition = replace(Chooserandom_Condition, Chooserandom_Condition == 41, 4.1)) 
+
+tmp <- tmp %>%
+  mutate(Chooserandom_Condition = replace(Chooserandom_Condition, Chooserandom_Condition == 42, 4.2)) 
+
+df <- tmp
+rm(tmp)
+
+```
+
+ # Accuracy on bounce counting 
+Here, for each condition, we measure the performance on bounce counting for each participant per trial.
+We also add a global accuracy score which is the mean of the trials : 2, 3, 4, critic and divided (Trial 1 is not included since we consider it as a training trial + Full attention trial is also not included since participants don't count bounces during this last trial)
+
+
+```{r Bounce counting Accuracy}
+
+tmp <- df
+
+tmp <- tmp %>% 
+  mutate(Error_Trial1 = case_when((Chooserandom_Instruction==2 & Chooserandom_Condition==1)~ abs(Trial1-6),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==1)~ abs(Trial1-5),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==2)~ abs(Trial1-11),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==2)~ abs(Trial1-10),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==3)~ abs(Trial1-16),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==3)~ abs(Trial1-17),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==41)~ abs(Trial1-19),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==41)~ abs(Trial1-22),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==42)~ abs(Trial1-19),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==42)~ abs(Trial1-22),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==5)~ abs(Trial1-27),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==5)~ abs(Trial1-24),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==6)~ abs(Trial1-32),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==6)~ abs(Trial1-32),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==7)~ abs(Trial1-36),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==7)~ abs(Trial1-38),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==8)~ abs(Trial1-41),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==8)~ abs(Trial1-46)))
+
+```
+
+
+# Calculation of an anxiety factorial score
+Here we want to calculate a factorial score for each participant based on the five items of anxiety feelings during the experiment
+
+```{r Anxiety factorial Score}
+tmp <- df
+
+# Check if it is possible to agregate theses five measure (anxious, nervous, calm, tense, stressed) in an unique factor : 
+dt1_Factor<- tmp %>%
+  select(Angry, Calm, Anxious, Nervous, Happy, Tense, Stressed, Depressed)
+
+ # Check the factorial distribution of these 8 items
+EFA_dt1 <- factanal(dt1_Factor, factors=2, rotation = "promax") 
+print(EFA_dt1, digits = 2, cutoff = .2)
+rm(dt1_Factor,EFA_dt1)
+## In this experiment, we could agregate "Calm" item to other items of anxiety because it load with the same factor which is not the case in every experiment
+# Moreover, items "angry" and "depressed" load with the anxiety factor but to a lesser degree, so we decided not to aggregate these items in our factorial score  according to our preregistration
+
+ # "Calm" item is an inverted one, so, we have to reverse it
+tmp <- tmp %>%
+  mutate(Calm_Recod = (8 - Calm))
+
+## Now we calculate a factorial score from these 4 measure of stress
+ # Build a data frame that only contain column of interest in this analysis
+dt2_Factor <- tmp %>%
+  select(Calm_Recod, Anxious, Nervous, Tense, Stressed)
+FactorialScore <- fa(dt2_Factor, nfactors=1, rotate = "promax", scores = "Bartlett")
+# Assign a threat score to each ppt calculated on the 5 measures of stress
+tmp$Fear_Score<-FactorialScore$scores 
+tmp$Fear_Score <- as.numeric(tmp$Fear_Score)
+
+ # Calculating a mean rather than a factorial score
+tmp <- tmp %>% 
+  mutate(Fear_Mean = rowMeans(select(tmp,c(Calm_Recod, Anxious, Nervous, Stressed, Tense))))
+
+ # Calculate the correlation between the factorial or the mean score of each participant on these 5 items
+cor.test(tmp$Fear_Score,tmp$Fear_Mean)
+ # The correlation is really high, so, according to or pre-registration, we use the factorial score rather than the mean on these 5 items
+
+df <- tmp
+
+rm(list=setdiff(ls(), c("df"))) # clear workspace except the data frame
+```
+
+

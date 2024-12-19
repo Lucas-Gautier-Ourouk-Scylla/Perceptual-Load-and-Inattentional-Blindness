@@ -1,0 +1,240 @@
+---
+title: "Analysis_Perceptual_Load"
+author: "Lu-K Gautier"
+output: html_document
+date: "2024-12-19"
+---
+
+
+
+Anticipation de suppressions de pptEs selon la préregistration: 
+- Supprimer les pptEs qui connaissent le paradigme (mais analyses avec et sans)
+- Garder les pptEs sur le full trial mais analyses avec et sans 
+- Supprimer si les erreurs sur tâche de comptage > 3 MAD
+- Supprimer outlier (Cook, levier, residual distance)
+
+
+table(tmp$KnewTask, tmp$Noticing_Critic)
+324/(237+324)
+81/(54+81)
+It seems there is no difference in the detection rate for participants that had already done such an experiment and the others who did not
+=> So we decided to keep these participants in our analyses.
+
+
+```{r Participant removing}
+warning("The suppression rules have not yet been implemented")
+
+tmp <- df
+
+# Remove participants who had already done the same experiment as our dynamic inattentional blindness paradigm
+tmp <- tmp %>%
+  filter(KnewExperiment == 1)
+
+warning(paste0("We removed n = ", table(df$KnewExperiment)[[2]], " participants because they report having already done exactely the same task"))
+
+df_No_Suppression <- df
+
+df <- tmp
+rm(tmp)
+
+```
+
+
+
+# Build dataframes for the main analyses
+
+```{r Dataframe building}
+tmp <- df
+
+# Build a dataframe only for participants in conditions where the unexpected items is irrelevant to the task set
+tmp_Irrelevant <- tmp %>%
+  filter(Chooserandom_Condition == 1 | Chooserandom_Condition == 2 | Chooserandom_Condition == 3 | Chooserandom_Condition == 4.1)
+
+# Replace the "41" value in this dataframe by a "4" Value which better reflect the number of stimuli in this condition
+tmp_Irrelevant <- tmp_Irrelevant %>%
+  mutate(Chooserandom_Condition = replace(Chooserandom_Condition, Chooserandom_Condition == 4.1, 4))
+
+
+
+# Build a dataframe only for participants in conditions where the unexpected items is relevant to the task set
+tmp_Relevant <- tmp %>%
+  filter(Chooserandom_Condition == 4.2 | Chooserandom_Condition == 5 | Chooserandom_Condition == 6 | Chooserandom_Condition == 7 | Chooserandom_Condition == 8)
+
+# Replace the "41" value in this dataframe by a "4" Value which better reflect the number of stimuli in this condition
+tmp_Relevant <- tmp_Relevant %>%
+  mutate(Chooserandom_Condition = replace(Chooserandom_Condition, Chooserandom_Condition == 4.2, 4))
+
+```
+
+
+# Main analyses
+## For the irrelevant conditions
+
+```{r Main Analysis1}
+
+Reg_Irrelevant <- glm(Noticing_Critic ~ Chooserandom_Condition, family ="binomial", data = tmp_Irrelevant)
+summary(Reg_Irrelevant)
+rsq.partial(Reg_Irrelevant) # Calculate R² 
+odds.ratio(Reg_Irrelevant)
+
+
+```
+
+
+## For the relevant conditions
+
+```{r Main analysis2}
+
+Reg_Relevant <- glm(Noticing_Critic ~ Chooserandom_Condition, family ="binomial", data = tmp_Relevant)
+summary(Reg_Relevant)
+rsq.partial(Reg_Relevant) # Calculate R² 
+odds.ratio(Reg_Relevant)
+
+```
+
+
+## Graphique representation 
+
+```{r}
+
+abs_Incong <- c(1,2,3,4) ; Ord_Incong <- c(.91, .39, .12, .13)
+plot(abs_Incong,Ord_Incong,type="o",col=2, lwd = 3, pch=16,  xlim = c(1, 9), xlab="Nombre de cibles/distracteurs",ylab="Taux de détection de l'élement inattendu")
+abs_Cong <- c(4,5,6,7,8) ; Ord_Cong <- c(.68, .69, .84, .76, .74)
+points(abs_Cong,Ord_Cong,type = "o", col=3, lwd = 3 ,pch=16)
+legend("bottomright",
+       legend = c("Stimulus inattendu non-pertinent", "Stimulus inattendu pertinent"),
+       bty = "n", # Removes the legend box
+       lty = c(1, 1),
+       col = c(2, 3),
+       lwd = 3, 
+       cex = 1.2)
+
+
+```
+
+
+
+## Relevance effect in the condition with 4 targets and 4 distractors
+
+```{r Relevance effect}
+
+df_Condition_4 <- df %>%
+  filter(Chooserandom_Condition == 4.1 | Chooserandom_Condition == 4.2) %>%
+  mutate(UE_Relevance_str = case_when(Chooserandom_Condition == 4.1 ~ "Irrelevant", 
+                                      Chooserandom_Condition == 4.2 ~ "Relevant")) %>%
+  mutate(UE_Relevance = case_when(Chooserandom_Condition == 4.1 ~ -0.5, 
+                                      Chooserandom_Condition == 4.2 ~ +0.5))
+  
+Relevance_Condition_4 <- glm(Noticing_Critic ~ UE_Relevance, family = "binomial", data = df_Condition_4)
+summary(Relevance_Condition_4)
+odds.ratio(Relevance_Condition_4)
+
+plot_model(Relevance_Condition_4, type = "pred", terms = "UE_Relevance")
+table(df_Condition_4$Noticing_Critic, df_Condition_4$UE_Relevance_str)
+
+
+```
+
+
+
+
+## Anxiety effect
+
+```{r Anxiety effect}
+
+Reg_Anxiety_Irrelevant <- glm(Noticing_Critic ~ Fear_Score, family ="binomial", data = tmp_Irrelevant)
+summary(Reg_Anxiety_Irrelevant)
+rsq.partial(Reg_Anxiety_Irrelevant)
+odds.ratio(Reg_Anxiety_Irrelevant)
+
+Reg_Anxiety_Load_Irrelevant <- lm(Fear_Score ~ Chooserandom_Condition, data = tmp_Irrelevant)
+summary(Reg_Anxiety_Load_Irrelevant)
+rsq.partial(Reg_Anxiety_Load_Irrelevant)
+
+# Cette analyse est intéressante : l'effet de l'anxiété auto-rapportée durant l'expérience quand on contrôle l'effet du stress dû à la difficulté de la tâche :
+# Reg_Anxiety_Irrelevant <- glm(Noticing_Critic ~ Fear_Score+Chooserandom_Condition, family ="binomial", data = tmp_Irrelevant)
+# summary(Reg_Anxiety_Irrelevant)
+# rsq.partial(Reg_Anxiety_Irrelevant)
+# odds.ratio(Reg_Anxiety_Irrelevant)
+
+warning("Dans l'expérience avec les deux éléments inattendus, lorsque j'ai testé l'effet de la peur ressentie sur la détection, je crois que je l'ai fait de manière indifférenciée pour tout les éléments inattendus alors qu'en réalité je dois le faire lorsque l'élément inattendu est incongruent puis lorsque l'élément inattendu est congruent !")
+
+  
+
+Reg_Anxiety_Relevant <- glm(Noticing_Critic ~ Fear_Score, family ="binomial", data = tmp_Relevant)
+summary(Reg_Anxiety_Relevant)
+odds.ratio(Reg_Anxiety_Relevant)
+
+Reg_Anxiety_Load_Relevant <- lm(Fear_Score ~ Chooserandom_Condition, data = tmp_Relevant)
+summary(Reg_Anxiety_Load_Relevant)
+rsq.partial(Reg_Anxiety_Load_Relevant)
+```
+
+## Equivalence testing
+
+```{r Equivalence testing}
+table(tmp_Relevant$Chooserandom_Condition)
+table(tmp_Relevant$Noticing_Critic, tmp_Relevant$Chooserandom_Condition)
+Prop_Detect_Relevant <- matrix(table(tmp_Relevant$Noticing_Critic, tmp_Relevant$Chooserandom_Condition),nrow = 2,ncol = 5)
+chisq.test(Prop_Detect_Relevant) # To report results : X?(df, N) = (X? Value), p = (p-value)
+SetEffect2<- t(Prop_Detect_Relevant)#Rotating my contingency table
+chisq.test(Prop_Detect_Relevant) # If the Chi? is significant, it means that my two variables (congruency and Detection) are dependant : The level of detection is statistically moderate by the congruency of the unexpected element
+
+
+
+Prop_IB <-  as.data.frame(matrix(table(tmp$Chooserandom_Condition, tmp$Noticing_Critic),nrow = 9,ncol = 2))
+
+names(Prop_IB)[1] <- "No_Noticing_Nb"
+names(Prop_IB)[2] <- "Noticing_Nb"
+
+Prop_IB <- Prop_IB %>%
+  mutate(Condition_Nb = (No_Noticing_Nb+Noticing_Nb))
+
+Prop_IB <- Prop_IB %>%
+  mutate(IB_Prop = No_Noticing_Nb / Condition_Nb)
+
+Prop_IB <- Prop_IB %>%
+  mutate(Detection_Prop = Noticing_Nb / Condition_Nb)
+
+warning("It could be interesting to add the number of stimuli by condition to this table")
+
+
+# Between condition '4' and '8'
+TOSTtwo.prop(alpha = .05, prop1 = .68, prop2 = .744, n1 = 75, n2 = 78, low_eqbound = -.21, high_eqbound = .21)
+
+
+# Between condition '4' and '7'
+TOSTtwo.prop(alpha = .05, prop1 = .68, prop2 = .76, n1 = 75, n2 = 75, low_eqbound = -.21, high_eqbound = .21)
+
+
+```
+
+# Mess: Task difficulty analysis
+
+```{r Other1}
+
+tmp_Load4 <- tmp %>%
+  filter(Chooserandom_Condition==4.2)
+
+tmp_Load5 <- tmp %>%
+  filter(Chooserandom_Condition==5)
+
+tmp_Load6 <- tmp %>%
+  filter(Chooserandom_Condition==6)
+
+tmp_Load7 <- tmp %>%
+  filter(Chooserandom_Condition==7)
+
+tmp_Load8 <- tmp %>%
+  filter(Chooserandom_Condition==8)
+
+summary(tmp_Load4$Trial_Critic)
+summary(tmp_Load5$Trial_Critic)
+summary(tmp_Load6$Trial_Critic)
+summary(tmp_Load7$Trial_Critic)
+summary(tmp_Load8$Trial_Critic)
+
+
+
+```
+
