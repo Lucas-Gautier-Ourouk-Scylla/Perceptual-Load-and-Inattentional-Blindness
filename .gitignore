@@ -3,5 +3,6 @@
 .RData
 .Ruserdata
 
-Data/
+Raw_Data/
+Transformed_Data/
 Output/

@@ -5,44 +5,255 @@ date: '2022-11-14'
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+# Aim of the script
 
-cat("\014") # clear console
-rm(list=ls()) # clear workspace
-set.seed(42) # set overall random seed for reproducibility
-```
+This script is the data cleaning for the project "IB_Perceptual_Load". This project explore the interaction between perceptual load and attentional setting in an sustained inattentional blindness task.
 
 
+OSF link of this project is <https://osf.io/y7awc/> (preregistration is
+available at <https://osf.io/grdca>)
 
 ```{r packages}
-list.of.packages <- c("dplyr", "emmeans", "tidyverse", "readr", "psych", "lmerTest", "rsq", "questionr", "TOSTER", "sjPlot")
-new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
-if(length(new.packages)) install.packages(new.packages)
-invisible(lapply(list.of.packages, require, character.only = TRUE))
 
-remove(list.of.packages, new.packages)
+require(pacman)
+
+p_load(dplyr, emmeans, tidyverse, readr, psych, lmerTest, ggplot2, kableExtra, rsq, questionr, TOSTER, sjPlot)
+
+
+# df <- Initial_data <- read_csv("Raw_Data/data.csv")
+# 
+# df_Anonymous <- df %>%
+#   mutate(PROLIFIC_PID = "####", 
+#          SESSION_ID = "####")
+# 
+# write.csv(df_Anonymous, file = "Raw_Data/data_anonymous.csv")
+
+
+df <- Initial_data <- read_csv("Raw_Data/data_anonymous.csv") %>%
+    select(-"...1")
 
 ```
 
  # Renaming variables
  
-- Participant: Name of the participant data
+- participant : Name of the participant data
 
-- Chooserandom_Instruction: Instructions that are given to participants considering the main task of counting the bounces made by White squares (Chooserandom_Instruction = 1) or Black squares (Chooserandom_Instruction = 2)
+- response_id : Participant number
 
-- Chooserandom_Condition: 
+## Experimental Conditions
 
+PrimaryTask: Which instructions participants have to perform in terms of
+words\
+- WhiteFocus = Count bounces of Whites squares\
+- BlackFocus = Count bounces of Black squares
+
+PrimaryTask_C: Which instructions participants have to perform in terms
+of code\
+- -0.5 = White squares bounce counting condition\
+- +0.5 = Black squares bounce counting condition
+
+
+Congruency_C : Is the unexpected element congruent or incongruent with task settings in terms of words. **In this study, the Unexpected Element is Incongruent in each experimental condition**\
+- -0.5 = The unexpected element is incongruent with task settings \
+- +0.5 = The unexpected element is congruent with task settings \
+
+Congruency_str : Is the unexpected element congruent or incongruent with task settings in terms of words. **In this study, the Unexpected Element is Incongruent in each experimental condition**\
+- Incongruent = The unexpected element is incongruent with task settings \
+- Congruent = The unexpected element is congruent with task settings \
+
+
+Load_C : The perceptual load of the task (the number represent the number of targets as welle as the number of distractors. It means that the real number of stimuli on the screen is twice this number).
+- 1 : 1 target and 1 distractor (2 stimuli on the screen)
+- 2 : 2 targets and 2 distractors (4 stimuli on the screen)
+- 3 : 3 targets and 3 distractors (6 stimuli on the screen)
+- 4 : 4 targets and 4 distractors (8 stimuli on the screen) in the Incongruent condition
+- 4 : 4 targets and 4 distractors (8 stimuli on the screen) in the Congruent condition
+- 5 : 5 targets and 5 distractors (10 stimuli on the screen)
+- 6 : 6 targets and 6 distractors (12 stimuli on the screen)
+- 7 : 7 targets and 7 distractors (14 stimuli on the screen)
+- 8 : 8 targets and 8 distractors (16 stimuli on the screen)
+
+
+Load_str : The perceptual load of the task (the number represent the number of targets as welle as the number of distractors. It means that the real number of stimuli on the screen is twice this number).
+- One : 1 target and 1 distractor (2 stimuli on the screen)
+- Two : 2 targets and 2 distractors (4 stimuli on the screen)
+- Three : 3 targets and 3 distractors (6 stimuli on the screen)
+- Four_Incong : 4 targets and 4 distractors (8 stimuli on the screen) in the Incongruent condition
+- Four_Cong : 4 targets and 4 distractors (8 stimuli on the screen) in the Congruent condition
+- Five : 5 targets and 5 distractors (10 stimuli on the screen)
+- Six : 6 targets and 6 distractors (12 stimuli on the screen)
+- Seven : 7 targets and 7 distractors (14 stimuli on the screen)
+- Eight : 8 targets and 8 distractors (16 stimuli on the screen)
+
+
+## Noticing
+
+Noticing_Critic: If participant report having seen something during the
+critical trial and report at least one characteristic of unexpected
+elements (color, feature, motion)\
+- 0 = Non noticer\
+- 1 = Noticer who report at least one good feature of the unexpected
+element
+
+Noticing_Divided: If participant report having seen something during the
+Divided attention trial and report at least one characteristic of unexpected
+elements (color, feature, motion)\
+- 0 = Non noticer\
+- 1 = Noticer who report at least one good feature of the unexpected
+element
+
+Noticing_Full: If participant report having seen something during the
+Full attention trial and report at least one characteristic of unexpected
+elements (color, feature, motion)\
+- 0 = Non noticer\
+- 1 = Noticer who report at least one good feature of the unexpected
+element
+
+
+## Bounce-counting performance
+
+Count_Trial1: Number of bounces counted during Trial1
+
+Count_Trial2: Number of bounces counted during Trial2
+
+Count_Trial3: Number of bounces counted during Trial3
+
+Count_Trial4: Number of bounces counted during Trial4
+
+Count_TrialCritical: Number of bounces counted during Critical Trial
+
+Count_TrialDivided: Number of bounces counted during Divided Attention
+Trial
+
+Error_Trial1: absolute value of the difference between the real number
+of bounce and what the participant reports for Trial 1
+
+ErrorRate_Trial1: Error Rate for Trial 1 (=absolute value of the difference between the real number
+of bounce and what the participant reports, divided by the total number of bounces)
+
+
+Error_Trial2: absolute value of the difference between the real number
+of bounce and what the participant reports for Trial 2
+
+ErrorRate_Trial2: Error Rate for Trial 2 (=absolute value of the difference between the real number
+of bounce and what the participant reports, divided by the total number of bounces)
+
+
+Error_Trial3: absolute value of the difference between the real number
+of bounce and what the participant reports for Trial 3
+
+ErrorRate_Trial3: Error Rate for Trial 3 (=absolute value of the difference between the real number
+of bounce and what the participant reports, divided by the total number of bounces)
+
+
+Error_Trial4: absolute value of the difference between the real number
+of bounce and what the participant reports for Trial 4
+
+ErrorRate_Trial4: Error Rate for Trial 4 (=absolute value of the difference between the real number
+of bounce and what the participant reports, divided by the total number of bounces)
+
+
+Error_TrialCritic: absolute value of the difference between the real
+number of bounce and what the participant reports for the Critical Trial
+
+ErrorRate_TrialCritic: Error Rate for the critical trial
+
+
+Error_TrialDivided: absolute value of the difference between the real
+number of bounce and what the participant reports for the Divided
+Attention Trial
+
+ErrorRate_TrialDivided: Error Rate for the divided trial
+
+
+### Anxiety scale 
+
+Participants answers on the anxiety scale after the IB task:
+    - Angry: Participant answer on the angry item from the anxiety scale ("I currently feel angry"). Responses on a 7-likert scale, from 1 = "Not at all" to 7 = "Extremely".
+    - Anxious: Participant answer on the anxious item from the anxiety scale ("I currently feel anxious"). Responses on a 7-likert scale, from 1 = "Not at all" to 7 = "Extremely".
+    - Happy: Participant answer on the happy item from the anxiety scale ("I currently feel happy"). Responses on a 7-likert scale, from 1 = "Not at all" to 7 = "Extremely".
+    - Depressed: Participant answer on the depressed item from the anxiety scale ("I'm currently feeling depressed"). Responses on a 7-likert scale, from 1 = "Not at all" to 7 = "Extremely".
+    - Tense: Participant answer on the tense item from the anxiety scale ("I'm currently feeling tense"). Responses on a 7-likert scale, from 1 = "Not at all" to 7 = "Extremely".
+    - Calm: Participant answer on the calm item from the anxiety scale ("I'm currently feeling calm"). Responses on a 7-likert scale, from 1 = "Not at all" to 7 = "Extremely".
+    - Stressed: Participant answer on the stressed item from the anxiety scale ("I feel stressed at the moment"). Responses on a 7-likert scale, from 1 = "Not at all" to 7 = "Extremely".
+    - Nervous: Participant answer on the nervous item from the anxiety scale ("I'm currently feeling nervous"). Responses on a 7-likert scale, from 1 = "Not at all" to 7 = "Extremely".
+    
+    
+FearScore: A factorial composite score of 4 anxiety items (Tense,
+Anxious, Nervous, Stressed) measured after the experimental induction, using a Bartlett method
+
+FearMean: A composite score of 4 anxiety items (Tense, Anxious, Tense,
+Stressed) after the experimental induction, using a mean calculation rather than a factorial score
+
+
+
+## Exclusion variables
+
+VisionPb_str: Did participants report having vision problems (not corrected) during the experiment (Word variable coding)
+- No = Participant reports not having any vision problem\
+- Yes = Participant reports having vision problems\
+
+VisionPb: Did participants report having vision problems (not corrected) during the experiment (Contrast variable coding)
+- -0.5 = Participant reports not having any prior expectations\
+- +0.5 = Participant reports having prior expectations\
+
+
+Knew: If participants have already done exactly the same task as this
+dynamic inattentional blindness task\
+- -0.5 = Never made exactly this task\
+- +0.5 = Ever made exactly this task
+
+Knew_str: If participants have already done exactly the same task as this
+dynamic inattentional blindness task\
+- No = Never made exactly this task\
+- Yes = Ever made exactly this task
+
+KnewTask: If participants have already done a similar task but not
+exactly the same one\
+- -0.5 = No task knowledge\
+- +0.5 = Task knowledge
+
+KnewTask_str: If participants have already done a similar task but not
+exactly the same one\
+- No = No task knowledge\
+- Yes = Task knowledge
+
+KnewIB: If participants knew the inattentional blindness phenomenon
+before to run the experiment\
+- -0.5 = No IB knowledge\
+- +0.5 = IB knowledge
+
+KnewIB_str: If participants knew the inattentional blindness phenomenon
+before to run the experiment\
+- No = No IB knowledge\
+- Yes = IB knowledge
+
+## Demographics
+
+Age: Participant self rating on age
+
+Gender: Participant gender self identification\
+- 1 = Woman self identification\
+- 2 = Man self identification\
+- 3 = None of these
+
+Gender_str: Participant gender self identification\
+- Woman = Woman self identification\
+- Man = Man self identification\
+- NoBinary = None of these
 
 
 ```{r read}
-df <- read_csv("Data/data.csv")
 
 tmp <- df
 
-names(tmp)[1] <- "Participant"
+names(tmp)[1] <- "participant"
 names(tmp)[2] <- "Chooserandom_Instruction"
 names(tmp)[3] <- "Chooserandom_Condition"
+
+tmp <- tmp %>% 
+  mutate(response_id = row_number())
+
 names(tmp)[4] <- "Trial1_C1"
 names(tmp)[5] <- "Trial2_C1"
 names(tmp)[6] <- "Trial3_C1"
@@ -231,18 +442,18 @@ names(tmp)[170] <- "Tense"
 names(tmp)[171] <- "Calm"
 names(tmp)[172] <- "Stressed"
 names(tmp)[173] <- "Nervous"
-names(tmp)[174] <- "VisionPb"
-names(tmp)[175] <- "KnewExperiment"
-names(tmp)[176] <- "KnewTask"
-names(tmp)[177] <- "KnewIB"
+names(tmp)[174] <- "Vision_1"
+names(tmp)[175] <- "Connaissance_1"
+names(tmp)[176] <- "Connaissance_Task_1"
+names(tmp)[177] <- "Connaissance_IB_1"
 names(tmp)[178] <- "Age"
 names(tmp)[179] <- "Gender"
 names(tmp)[180] <- "PROLIFIC_PID"
 names(tmp)[181] <- "STUDY_ID"
-names(tmp)[182] <- "SESSIOn_ID"
-names(tmp)[183] <- "TIME_Start"
-names(tmp)[184] <- "TIME_End"
-names(tmp)[185] <- "TIME_Total"
+names(tmp)[182] <- "SESSION_ID"
+names(tmp)[183] <- "TIME_start"
+names(tmp)[184] <- "TIME_end"
+names(tmp)[185] <- "TIME_total"
 
 df <- tmp
 
@@ -267,7 +478,7 @@ coalesce2 <- function(...) {
 
  # Build a unique column that contain the number of bounce counting in Trial 1 for all conditions
 tmp <- tmp %>% 
-  mutate(Trial1 = case_when(Chooserandom_Condition == "1" ~ Trial1_C1,
+  mutate(Count_Trial1 = case_when(Chooserandom_Condition == "1" ~ Trial1_C1,
                             Chooserandom_Condition == "2" ~ Trial1_C2,
                             Chooserandom_Condition == "3" ~ Trial1_C3,
                             Chooserandom_Condition == "41" ~ Trial1_C4_Incong,
@@ -280,7 +491,7 @@ tmp <- tmp %>%
 
  # Build a unique column that contain the number of bounce counting in Trial 2 for all conditions
 tmp <- tmp %>% 
-  mutate(Trial2 = case_when(Chooserandom_Condition == "1" ~ Trial2_C1,
+  mutate(Count_Trial2 = case_when(Chooserandom_Condition == "1" ~ Trial2_C1,
                             Chooserandom_Condition == "2" ~ Trial2_C2,
                             Chooserandom_Condition == "3" ~ Trial2_C3,
                             Chooserandom_Condition == "41" ~ Trial2_C4_Incong,
@@ -293,7 +504,7 @@ tmp <- tmp %>%
 
  # Build a unique column that contain the number of bounce counting in Trial 3 for all conditions
 tmp <- tmp %>% 
-  mutate(Trial3 = case_when(Chooserandom_Condition == "1" ~ Trial3_C1,
+  mutate(Count_Trial3 = case_when(Chooserandom_Condition == "1" ~ Trial3_C1,
                             Chooserandom_Condition == "2" ~ Trial3_C2,
                             Chooserandom_Condition == "3" ~ Trial3_C3,
                             Chooserandom_Condition == "41" ~ Trial3_C4_Incong,
@@ -305,7 +516,7 @@ tmp <- tmp %>%
 
  # Build a unique column that contain the number of bounce counting in Trial 4 for all conditions
 tmp <- tmp %>% 
-  mutate(Trial4 = case_when(Chooserandom_Condition == "1" ~ Trial4_C1,
+  mutate(Count_Trial4 = case_when(Chooserandom_Condition == "1" ~ Trial4_C1,
                             Chooserandom_Condition == "2" ~ Trial4_C2,
                             Chooserandom_Condition == "3" ~ Trial4_C3,
                             Chooserandom_Condition == "41" ~ Trial4_C4_Incong,
@@ -317,7 +528,7 @@ tmp <- tmp %>%
 
 
  # Build a unique column that contain the number of bounce counting in The critical trial for all conditions
-tmp$Trial_Critic <- coalesce2(tmp$Trial_Critic_C1, 
+tmp$Count_TrialCritical <- coalesce2(tmp$Trial_Critic_C1, 
                               tmp$Trial_Critic_C2, 
                               tmp$Trial_Critic_C3, 
                               tmp$Trial_Critic_C4_Incong, 
@@ -329,7 +540,7 @@ tmp$Trial_Critic <- coalesce2(tmp$Trial_Critic_C1,
 
 
  # Build a unique column that contain the number of bounce counting in The Divided attention trial for all conditions
-tmp$Trial_Divided <- coalesce2(tmp$Trial_Divided_C1, 
+tmp$Count_TrialDivided <- coalesce2(tmp$Trial_Divided_C1, 
                               tmp$Trial_Divided_C2, 
                               tmp$Trial_Divided_C3, 
                               tmp$Trial_Divided_C4_Incong, 
@@ -491,10 +702,7 @@ remove(tmp)
 tmp <- df
 
 tmp <- tmp %>% 
-  mutate(response_id = row_number())
-
-tmp <- tmp %>% 
-  select(Participant:Chooserandom_Condition, Angry:Gender, Trial1:response_id)
+  select(participant:Chooserandom_Condition, Angry:Gender, TIME_total:Motion_Full)
 
 df <- tmp 
 remove(tmp)
@@ -532,12 +740,6 @@ tmp <- tmp %>%
 warning("This checking make little differences in comparison to taking into account only the noticing self-report. It leads to an increasing in non-noticers number but it could be interesting to add some scripts in order to quantify this increasing")
 
 
-tmp <- tmp %>%
-  mutate(Chooserandom_Condition = replace(Chooserandom_Condition, Chooserandom_Condition == 41, 4.1)) 
-
-tmp <- tmp %>%
-  mutate(Chooserandom_Condition = replace(Chooserandom_Condition, Chooserandom_Condition == 42, 4.2)) 
-
 df <- tmp
 rm(tmp)
 
@@ -553,24 +755,49 @@ We also add a global accuracy score which is the mean of the trials : 2, 3, 4, c
 tmp <- df
 
 tmp <- tmp %>% 
-  mutate(Error_Trial1 = case_when((Chooserandom_Instruction==2 & Chooserandom_Condition==1)~ abs(Trial1-6),
-                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==1)~ abs(Trial1-5),
-                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==2)~ abs(Trial1-11),
-                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==2)~ abs(Trial1-10),
-                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==3)~ abs(Trial1-16),
-                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==3)~ abs(Trial1-17),
-                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==41)~ abs(Trial1-19),
-                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==41)~ abs(Trial1-22),
-                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==42)~ abs(Trial1-19),
-                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==42)~ abs(Trial1-22),
-                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==5)~ abs(Trial1-27),
-                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==5)~ abs(Trial1-24),
-                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==6)~ abs(Trial1-32),
-                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==6)~ abs(Trial1-32),
-                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==7)~ abs(Trial1-36),
-                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==7)~ abs(Trial1-38),
-                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==8)~ abs(Trial1-41),
-                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==8)~ abs(Trial1-46)))
+  mutate(Error_Trial1 = case_when((Chooserandom_Instruction==2 & Chooserandom_Condition==1)~ abs(Count_Trial1-6),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==1)~ abs(Count_Trial1-5),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==2)~ abs(Count_Trial1-11),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==2)~ abs(Count_Trial1-10),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==3)~ abs(Count_Trial1-16),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==3)~ abs(Count_Trial1-17),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==41)~ abs(Count_Trial1-19),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==41)~ abs(Count_Trial1-22),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==42)~ abs(Count_Trial1-19),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==42)~ abs(Count_Trial1-22),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==5)~ abs(Count_Trial1-27),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==5)~ abs(Count_Trial1-24),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==6)~ abs(Count_Trial1-32),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==6)~ abs(Count_Trial1-32),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==7)~ abs(Count_Trial1-36),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==7)~ abs(Count_Trial1-38),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==8)~ abs(Count_Trial1-41),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==8)~ abs(Count_Trial1-46))) %>% 
+  
+  mutate(ErrorRate_Trial1 = case_when((Chooserandom_Instruction==2 & Chooserandom_Condition==1)~ abs(Count_Trial1-6)/6,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==1)~ abs(Count_Trial1-5)/5,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==2)~ abs(Count_Trial1-11)/11,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==2)~ abs(Count_Trial1-10)/10,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==3)~ abs(Count_Trial1-16)/16,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==3)~ abs(Count_Trial1-17)/17,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==41)~ abs(Count_Trial1-19)/19,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==41)~ abs(Count_Trial1-22)/22,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==42)~ abs(Count_Trial1-19)/19,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==42)~ abs(Count_Trial1-22)/22,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==5)~ abs(Count_Trial1-27)/27,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==5)~ abs(Count_Trial1-24)/24,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==6)~ abs(Count_Trial1-32)/32,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==6)~ abs(Count_Trial1-32)/32,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==7)~ abs(Count_Trial1-36)/36,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==7)~ abs(Count_Trial1-38)/38,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==8)~ abs(Count_Trial1-41)/41,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==8)~ abs(Count_Trial1-46)/46))
+
+
+warning("In this part, I do not calculate the error and error rates for trial 2, trial 3, trial critic, trial 4, and trial divided. The number of bounces counting are listed in a notebook")
+
+df <- tmp
+rm(tmp)
 
 ```
 
@@ -583,13 +810,14 @@ tmp <- df
 
 # Check if it is possible to agregate theses five measure (anxious, nervous, calm, tense, stressed) in an unique factor : 
 dt1_Factor<- tmp %>%
-  select(Angry, Calm, Anxious, Nervous, Happy, Tense, Stressed, Depressed)
+  select(Angry, Calm, Anxious, Nervous, Happy, Tense, Stressed, Depressed)%>%
+  na.omit()
 
  # Check the factorial distribution of these 8 items
-EFA_dt1 <- factanal(dt1_Factor, factors=2, rotation = "promax") 
+EFA_dt1 <- factanal(dt1_Factor, factors=1, rotation = "promax") 
 print(EFA_dt1, digits = 2, cutoff = .2)
 rm(dt1_Factor,EFA_dt1)
-## In this experiment, we could agregate "Calm" item to other items of anxiety because it load with the same factor which is not the case in every experiment
+## In this experiment, loading of "Calm" item is .54 with other items. However, we decided not to agregate it with other items in order to preserve some consistency with other experiments
 # Moreover, items "angry" and "depressed" load with the anxiety factor but to a lesser degree, so we decided not to aggregate these items in our factorial score  according to our preregistration
 
  # "Calm" item is an inverted one, so, we have to reverse it
@@ -599,23 +827,140 @@ tmp <- tmp %>%
 ## Now we calculate a factorial score from these 4 measure of stress
  # Build a data frame that only contain column of interest in this analysis
 dt2_Factor <- tmp %>%
-  select(Calm_Recod, Anxious, Nervous, Tense, Stressed)
+  select(Anxious, Nervous, Tense, Stressed)
+
 FactorialScore <- fa(dt2_Factor, nfactors=1, rotate = "promax", scores = "Bartlett")
-# Assign a threat score to each ppt calculated on the 5 measures of stress
-tmp$Fear_Score<-FactorialScore$scores 
-tmp$Fear_Score <- as.numeric(tmp$Fear_Score)
+# Assign a threat score to each ppt calculated on the 4 measures of stress
+tmp$FearScore<-FactorialScore$scores 
+tmp$FearScore <- as.numeric(tmp$FearScore)
+
 
  # Calculating a mean rather than a factorial score
 tmp <- tmp %>% 
-  mutate(Fear_Mean = rowMeans(select(tmp,c(Calm_Recod, Anxious, Nervous, Stressed, Tense))))
+  mutate(FearMean = rowMeans(select(tmp,c(Anxious, Nervous, Stressed, Tense))))
 
  # Calculate the correlation between the factorial or the mean score of each participant on these 5 items
-cor.test(tmp$Fear_Score,tmp$Fear_Mean)
- # The correlation is really high, so, according to or pre-registration, we use the factorial score rather than the mean on these 5 items
+cor.test(tmp$FearScore,tmp$FearMean)
+ # The correlation is really high, so, according to or pre-registration, we use the factorial score rather than the mean on these 4 items
 
 df <- tmp
 
 rm(list=setdiff(ls(), c("df"))) # clear workspace except the data frame
+```
+
+
+
+```{r Adding_Variables}
+
+tmp <- df
+
+
+tmp <- tmp %>%
+  mutate(PrimaryTask_str = case_when(Chooserandom_Instruction == 1 ~ "WhiteFocus", 
+                                 Chooserandom_Instruction == 2 ~ "BlackFocus")) %>%
+  mutate(PrimaryTask_C = case_when(Chooserandom_Instruction == 1 ~ -0.5, 
+                                   Chooserandom_Instruction == 2 ~ +0.5)) %>%
+  select(-Chooserandom_Instruction)
+
+
+tmp <- tmp %>%
+  mutate(Congruency_str = case_when(Chooserandom_Condition == 1 | Chooserandom_Condition == 2 | Chooserandom_Condition == 3 | Chooserandom_Condition == 41 ~ "Incongruent", 
+                                Chooserandom_Condition == 42 | Chooserandom_Condition == 5 | Chooserandom_Condition == 6 | Chooserandom_Condition == 7 | Chooserandom_Condition == 8 ~ "Congruent")) %>%
+  mutate(Congruency_C = case_when(Chooserandom_Condition == 1 | Chooserandom_Condition == 2 | Chooserandom_Condition == 3 | Chooserandom_Condition == 41 ~ -0.5, 
+                                Chooserandom_Condition == 42 | Chooserandom_Condition == 5 | Chooserandom_Condition == 6 | Chooserandom_Condition == 7 | Chooserandom_Condition == 8 ~ +0.5)) 
+
+tmp <- tmp %>%
+  mutate(Load_C = case_when(Chooserandom_Condition == 1 ~ 1, 
+                            Chooserandom_Condition == 2 ~ 2,
+                            Chooserandom_Condition == 3 ~ 3,
+                            Chooserandom_Condition == 41 ~ 4,
+                            Chooserandom_Condition == 42 ~ 4,
+                            Chooserandom_Condition == 5 ~ 5,
+                            Chooserandom_Condition == 6 ~ 6,
+                            Chooserandom_Condition == 7 ~ 7,
+                            Chooserandom_Condition == 8 ~ 8)) %>%
+  mutate(Load_str = case_when(Chooserandom_Condition == 1 ~ "One", 
+                              Chooserandom_Condition == 2 ~ "Two",
+                              Chooserandom_Condition == 3 ~ "Three",
+                              Chooserandom_Condition == 41 ~ "Four_Incong",
+                              Chooserandom_Condition == 42 ~ "Four_Cong",
+                              Chooserandom_Condition == 5 ~ "Five",
+                              Chooserandom_Condition == 6 ~ "Six",
+                              Chooserandom_Condition == 7 ~ "Seven",
+                              Chooserandom_Condition == 8 ~ "Eight")) %>%
+  select(-Chooserandom_Condition)
+
+
+tmp <- tmp %>%
+  mutate(VisionPb = case_when(Vision_1 == 1 ~ -0.5, 
+                              Vision_1 == 2 ~ +0.5)) %>%
+  mutate(VisionPb_str = case_when(Vision_1 == 1 ~ "No", 
+                                  Vision_1 == 2 ~ "Yes")) %>%
+  select(-Vision_1) %>%
+  
+  
+  mutate(Knew = case_when(Connaissance_1 == 1 ~ -0.5, 
+                          Connaissance_1 == 2 ~ 0.5), 
+         Knew_str = case_when(Connaissance_1 == 1 ~ "No", 
+                              Connaissance_1 == 2 ~ "Yes")) %>%
+  
+  mutate(KnewTask = case_when(Connaissance_Task_1 == 1 ~ -0.5, 
+                              Connaissance_Task_1 == 2 ~ 0.5),
+         KnewTask_str = case_when(Connaissance_Task_1 == 1 ~ "No", 
+                                  Connaissance_Task_1 == 2 ~ "Yes")) %>%
+  
+  mutate(KnewIB = case_when(Connaissance_IB_1 == 1 ~ -0.5, 
+                            Connaissance_IB_1 == 2 ~ 0.5),
+         KnewIB_str = case_when(Connaissance_IB_1 == 1 ~ "No", 
+                                Connaissance_IB_1 == 2 ~ "Yes")) %>%
+  select(-c(Connaissance_1, Connaissance_Task_1, Connaissance_IB_1))
+
+
+tmp <- tmp %>%
+  mutate(Gender_str = case_when(Gender == 1 ~ "Woman", 
+                            Gender == 2 ~ "Man",
+                            Gender == 3 ~ "NoBinary" ))
+
+df <- tmp
+rm(list=setdiff(ls(), c("df"))) # clear workspace except the data frame
+
+
+```
+
+
+```{r Reorganise dataframe}
+
+df <- df %>%
+  mutate(Study_Name = "IB_Load")
+
+# A dataframe for the Threat X Congruency project
+df_Final <- df %>% 
+  select(Study_Name, response_id, participant, TIME_total, 
+         Age, Gender, Gender_str, VisionPb_str, VisionPb,
+         Knew, Knew_str, KnewTask, KnewTask_str, KnewIB, KnewIB_str,
+         PrimaryTask_str, PrimaryTask_C, Congruency_str, Congruency_C, Load_str, Load_C,
+         
+         Count_Trial1, Count_Trial2, Count_Trial3, Count_Trial4, Count_TrialCritical, Count_TrialDivided,
+         Error_Trial1, 
+         ErrorRate_Trial1,
+         
+         IB_Critic:Motion_Full,
+         Noticing_Critic, Noticing_Divided, Noticing_Full, 
+         
+         Angry, Happy, Depressed, Calm, Calm_Recod, Nervous, Anxious, Tense, Stressed,
+         FearScore, FearMean, 
+         )
+
+```
+
+
+```{r save datframes}
+
+write.csv(df, file = "Transformed_Data/Dataset_AllVariables_IB_Load.csv")
+
+write.csv(df_Final, file = "Transformed_Data/Dataset_Final_IB_Load.csv")
+
+
 ```
 
 
