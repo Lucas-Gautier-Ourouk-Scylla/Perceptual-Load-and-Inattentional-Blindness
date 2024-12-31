@@ -791,10 +791,51 @@ tmp <- tmp %>%
                                   (Chooserandom_Instruction==2 & Chooserandom_Condition==7)~ abs(Count_Trial1-36)/36,
                                   (Chooserandom_Instruction==1 & Chooserandom_Condition==7)~ abs(Count_Trial1-38)/38,
                                   (Chooserandom_Instruction==2 & Chooserandom_Condition==8)~ abs(Count_Trial1-41)/41,
-                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==8)~ abs(Count_Trial1-46)/46))
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==8)~ abs(Count_Trial1-46)/46))  %>%
+  
+  
+  mutate(Error_TrialCritic = case_when((Chooserandom_Instruction==2 & Chooserandom_Condition==1)~ abs(Count_TrialCritical-6),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==1)~ abs(Count_TrialCritical-6),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==2)~ abs(Count_TrialCritical-14),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==2)~ abs(Count_TrialCritical-12),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==3)~ abs(Count_TrialCritical-17),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==3)~ abs(Count_TrialCritical-16),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==41)~ abs(Count_TrialCritical-23),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==41)~ abs(Count_TrialCritical-24),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==42)~ abs(Count_TrialCritical-20),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==42)~ abs(Count_TrialCritical-22),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==5)~ abs(Count_TrialCritical-26),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==5)~ abs(Count_TrialCritical-28),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==6)~ abs(Count_TrialCritical-28),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==6)~ abs(Count_TrialCritical-32),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==7)~ abs(Count_TrialCritical-36),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==7)~ abs(Count_TrialCritical-33),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==8)~ abs(Count_TrialCritical-45),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==8)~ abs(Count_TrialCritical-42))) %>%
+  
+  mutate(ErrorRate_TrialCritic = case_when((Chooserandom_Instruction==2 & Chooserandom_Condition==1)~ abs(Count_TrialCritical-6)/6,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==1)~ abs(Count_TrialCritical-6)/6,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==2)~ abs(Count_TrialCritical-14)/14,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==2)~ abs(Count_TrialCritical-12)/12,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==3)~ abs(Count_TrialCritical-17)/17,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==3)~ abs(Count_TrialCritical-16)/16,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==41)~ abs(Count_TrialCritical-23)/23,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==41)~ abs(Count_TrialCritical-24)/24,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==42)~ abs(Count_TrialCritical-20)/20,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==42)~ abs(Count_TrialCritical-22)/22,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==5)~ abs(Count_TrialCritical-26)/26,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==5)~ abs(Count_TrialCritical-28)/28,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==6)~ abs(Count_TrialCritical-28)/28,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==6)~ abs(Count_TrialCritical-32)/32,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==7)~ abs(Count_TrialCritical-36)/36,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==7)~ abs(Count_TrialCritical-33)/33,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==8)~ abs(Count_TrialCritical-45)/45,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==8)~ abs(Count_TrialCritical-42)/42))
 
 
-warning("In this part, I do not calculate the error and error rates for trial 2, trial 3, trial critic, trial 4, and trial divided. The number of bounces counting are listed in a notebook")
+warning("In this part, I do not calculate the error and error rates for trial 2, trial 3, trial 4, and trial divided. The number of bounces counting are listed in a notebook")
+
+
 
 df <- tmp
 rm(tmp)
@@ -921,6 +962,14 @@ tmp <- tmp %>%
                             Gender == 2 ~ "Man",
                             Gender == 3 ~ "NoBinary" ))
 
+tmp <- tmp %>%
+  mutate(Noticing_Critic_str = case_when(Noticing_Critic == 0 ~ "NonNoticer",
+                                         Noticing_Critic == 1 ~ "Noticer"),
+         Noticing_Divided_str = case_when(Noticing_Divided == 0 ~ "NonNoticer",
+                                          Noticing_Divided == 1 ~ "Noticer"),
+         Noticing_Full_str = case_when(Noticing_Full == 0 ~ "NonNoticer",
+                                       Noticing_Full == 1 ~ "Noticer"))
+
 df <- tmp
 rm(list=setdiff(ls(), c("df"))) # clear workspace except the data frame
 
@@ -941,11 +990,11 @@ df_Final <- df %>%
          PrimaryTask_str, PrimaryTask_C, Congruency_str, Congruency_C, Load_str, Load_C,
          
          Count_Trial1, Count_Trial2, Count_Trial3, Count_Trial4, Count_TrialCritical, Count_TrialDivided,
-         Error_Trial1, 
-         ErrorRate_Trial1,
+         Error_Trial1, Error_TrialCritic,
+         ErrorRate_Trial1, ErrorRate_TrialCritic,
          
          IB_Critic:Motion_Full,
-         Noticing_Critic, Noticing_Divided, Noticing_Full, 
+         Noticing_Critic, Noticing_Critic_str, Noticing_Divided, Noticing_Divided_str, Noticing_Full, Noticing_Full_str,
          
          Angry, Happy, Depressed, Calm, Calm_Recod, Nervous, Anxious, Tense, Stressed,
          FearScore, FearMean, 
@@ -956,10 +1005,7 @@ df_Final <- df %>%
 
 ```{r save datframes}
 
-write.csv(df, file = "Transformed_Data/Dataset_AllVariables_IB_Load.csv")
-
 write.csv(df_Final, file = "Transformed_Data/Dataset_Final_IB_Load.csv")
-
 
 ```
 

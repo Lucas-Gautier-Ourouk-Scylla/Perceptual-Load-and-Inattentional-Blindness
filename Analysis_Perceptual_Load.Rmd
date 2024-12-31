@@ -5,6 +5,25 @@ output: html_document
 date: "2024-12-19"
 ---
 
+# Aim of the script
+
+This script is the analysis script for the project "IB_Perceptual_Load". This project explore the interaction between perceptual load and attentional setting in an sustained inattentional blindness task. 
+In this study, participants complete a dynamic inattentional blindness paradigm with white and black squares bouncing on the edge of the screen. We manipulated attentional setting by the congruency between the color of the target and the color of the unexepected element. In this experiment, we also manipulated the load of the inattentional blindness task, changing the umbre of stimuli (i.e., targets and distractors) on the screen. 
+
+
+OSF link of this project is <https://osf.io/y7awc/> (preregistration is
+available at <https://osf.io/grdca>)
+
+```{r packages}
+
+require(pacman)
+
+p_load(dplyr, emmeans, tidyverse, readr, psych, lmerTest, ggplot2, kableExtra, rsq, questionr, TOSTER, sjPlot)
+
+Initial_data_Load <- read_csv("Transformed_Data/Dataset_Final_IB_Load.csv")%>%
+  select(-"...1")
+
+```
 
 
 Anticipation de suppressions de pptEs selon la préregistration: 
@@ -20,118 +39,286 @@ table(tmp$KnewTask, tmp$Noticing_Critic)
 It seems there is no difference in the detection rate for participants that had already done such an experiment and the others who did not
 => So we decided to keep these participants in our analyses.
 
+# Data exclusion
 
-```{r Participant removing}
-warning("The suppression rules have not yet been implemented")
+```{r Participant removing, include = FALSE}
 
-tmp <- df
+tmp <- df_Load <- Initial_data_Load
 
-# Remove participants who had already done the same experiment as our dynamic inattentional blindness paradigm
+# To count the number of NA in each column
+# sapply(df, function(x) sum(is.na(x)))
+
+# Remove participants who had already done the same experiment as our dynamic inattentional blindness paradigm and who didn't complete the whole study
 tmp <- tmp %>%
-  filter(KnewExperiment == 1)
+  filter(!is.na(TIME_total)) %>%
+  filter(Knew == -0.5) 
 
-warning(paste0("We removed n = ", table(df$KnewExperiment)[[2]], " participants because they report having already done exactely the same task"))
 
-df_No_Suppression <- df
+tmp_Incong <- tmp %>%
+  filter(Congruency_str == "Incongruent") %>%
+  mutate(Mad_Incong = case_when(Congruency_str == "Incongruent" & (ErrorRate_TrialCritic >= (median(ErrorRate_TrialCritic)+3*mad(ErrorRate_TrialCritic))) ~ "Out_Mad", 
+                                Congruency_str == "Incongruent" & (ErrorRate_TrialCritic <= (median(ErrorRate_TrialCritic)+3*mad(ErrorRate_TrialCritic))) ~ "In_Mad"))
 
-df <- tmp
+tmp_Cong <- tmp %>%
+  filter(Congruency_str == "Congruent") %>%
+  mutate(Mad_Cong = case_when(Congruency_str == "Congruent" & (ErrorRate_TrialCritic >= (median(ErrorRate_TrialCritic)+3*mad(ErrorRate_TrialCritic))) ~ "Out_Mad", 
+                              Congruency_str == "Congruent" & (ErrorRate_TrialCritic <= (median(ErrorRate_TrialCritic)+3*mad(ErrorRate_TrialCritic))) ~ "In_Mad"))
+
+tmp <- combine(tmp_Cong, tmp_Incong) %>%
+  mutate(Mad_Cong = ifelse(is.na(Mad_Cong), "Not_Concerned", Mad_Cong),
+         Mad_Incong = ifelse(is.na(Mad_Incong), "Not_Concerned", Mad_Incong)) %>%
+  filter(Mad_Cong == "In_Mad" | Mad_Incong == "In_Mad")
+
+df_Load <- tmp
 rm(tmp)
+
+# sum(is.na(Initial_data_Load$TIME_total))
+# table(Initial_data_Load$Knew)[[2]]
+# table(tmp_Incong$Mad_Incong)[["Out_Mad"]]
+# table(tmp_Cong$Mad_Cong)[["Out_Mad"]]
+
 
 ```
 
+
+Here, we removed some participants according to exclusion rules defined
+in our pre-registration. These exclusions means:
+
+-   n = `r sum(is.na(Initial_data_Load$TIME_total))` participants that did
+    not complete the study entirely
+-   n = `r table(Initial_data_Load$Knew)[[2]]` participants who report having
+    already done exactly the same task
+-   n = `r table(tmp_Cong$Mad_Cong)[["Out_Mad"]]` and n =
+    `r table(tmp_Incong$Mad_Incong)[["Out_Mad"]]` participants whose
+    Error Rate on the bounce-counting task is higher than 3 Mad from
+    the rest of the sample on the critical trial respectively in the
+    congruent and in the incongruent conditions (this bounce-counting
+    performance represents the difference between participant's
+    performance and the real number of bounces in the critical trial, divided by the real number of bounces)
+
+Even if a total number of n = `r nrow(Initial_data_Load)` participants
+started the experiment, we get only n =
+`r nrow(Initial_data_Load)-sum(is.na(Initial_data_Load$TIME_total))` complete
+data. In addition, after applying the exclusion rules defined in our
+preregistration, the final number of participants to run our analysis is
+n = `r nrow(df_Load)`
 
 
 # Build dataframes for the main analyses
 
 ```{r Dataframe building}
-tmp <- df
 
 # Build a dataframe only for participants in conditions where the unexpected items is irrelevant to the task set
-tmp_Irrelevant <- tmp %>%
-  filter(Chooserandom_Condition == 1 | Chooserandom_Condition == 2 | Chooserandom_Condition == 3 | Chooserandom_Condition == 4.1)
-
-# Replace the "41" value in this dataframe by a "4" Value which better reflect the number of stimuli in this condition
-tmp_Irrelevant <- tmp_Irrelevant %>%
-  mutate(Chooserandom_Condition = replace(Chooserandom_Condition, Chooserandom_Condition == 4.1, 4))
+df_Load_Incongruent <- df_Load %>%
+  filter(Congruency_str == "Incongruent")
 
 
 
 # Build a dataframe only for participants in conditions where the unexpected items is relevant to the task set
-tmp_Relevant <- tmp %>%
-  filter(Chooserandom_Condition == 4.2 | Chooserandom_Condition == 5 | Chooserandom_Condition == 6 | Chooserandom_Condition == 7 | Chooserandom_Condition == 8)
-
-# Replace the "41" value in this dataframe by a "4" Value which better reflect the number of stimuli in this condition
-tmp_Relevant <- tmp_Relevant %>%
-  mutate(Chooserandom_Condition = replace(Chooserandom_Condition, Chooserandom_Condition == 4.2, 4))
+df_Load_Congruent <- df_Load %>%
+  filter(Congruency_str == "Congruent")
 
 ```
 
 
 # Main analyses
-## For the irrelevant conditions
 
-```{r Main Analysis1}
+## Attentional Set effect
 
-Reg_Irrelevant <- glm(Noticing_Critic ~ Chooserandom_Condition, family ="binomial", data = tmp_Irrelevant)
-summary(Reg_Irrelevant)
-rsq.partial(Reg_Irrelevant) # Calculate R² 
-odds.ratio(Reg_Irrelevant)
+Here, we want to replicate the traditional attention set effect on noticing. Given that in the condition with four targets and 4 distractors, we have noticing rate both for a congruent and an incongruent unexpected element, we test the effect of attention set on this condition. 
+
+```{r Attention-Set-Effect}
+
+# Filter the condition with 4 targets and 4 distractors
+df_Load_AttentionSet <- df_Load %>%
+  filter(Load_C == 4)
+
+# Test the effect of Attention Set on noticing
+AttentionSet <- glm(Noticing_Critic ~ Congruency_C, family ="binomial", data = df_Load_AttentionSet)
+summary(AttentionSet)
+
+Report_AttentionSet <- summary(AttentionSet)
+
+# With Covariates
+AttentionSet_Cov <- glm(Noticing_Critic ~ Congruency_C + PrimaryTask_C + ErrorRate_TrialCritic , family ="binomial", data = df_Load_AttentionSet)
+summary(AttentionSet_Cov)
+odds.ratio(AttentionSet_Cov) # Calculate ODD RATIO of the model
+
+Report_AttentionSet_Cov <- summary(AttentionSet_Cov)
+Coef_AttentionSet_Cov <- summary(AttentionSet_Cov)[[12]]
+
+```
+### Noticing Proportions
+
+```{r Proportions-Attention-Set}
+
+# Proportion of Noticing
+Table_Load_AttentionSet_Nb <- table(df_Load_AttentionSet$Congruency_str, dnn = "Congruency_Condition")
+
+Table_Load_NoticingCritic_AttentionSet_Nb <- table(df_Load_AttentionSet$Noticing_Critic, df_Load_AttentionSet$Congruency_str, dnn = c("UE_Noticing", "Congruency_Condition"))
+
+Table_Load_NoticingCritic_AttentionSet_Prop <- round(prop.table(table(df_Load_AttentionSet$Noticing_Critic, df_Load_AttentionSet$Congruency_str, dnn = c("UE_Noticing", "Congruency_Condition")), margin = 2), digits = 2)
+
+```
+
+
+### Graphic representation 
+
+```{r Graph-Attention-Set}
+
+AttentionSet_str <- glm(Noticing_Critic ~ Congruency_str + PrimaryTask_C + ErrorRate_TrialCritic, family ="binomial", data = df_Load_AttentionSet)
+Report_AttentionSet_str <- summary(AttentionSet_str)
+
+plot_model(AttentionSet_str, vline.color = "red", show.values = TRUE, value.offset = .3)
+
+plot_model(AttentionSet_str, type = "pred", terms = "Congruency_str")
+
+```
+
+
+## Perceptual Load effect
+
+### Incongruent Unexpected Element 
+
+Test the linear prediction of perceptual load : the increasing of perceptual load leads to a decreasing in noticing rate of the incongruent unexpected element
+
+```{r Load-Effect-Incongruent}
+
+Load_Incong <- glm(Noticing_Critic ~ Load_C, family ="binomial", data = df_Load_Incongruent)
+summary(Load_Incong)
+
+Report_Load_Incong <- summary(Load_Incong)
+
+# Load_Incong_str <- glm(Noticing_Critic ~ Load_str, family ="binomial", data = df_Load_Incongruent)
+# plot_model(Load_Incong_str, vline.color = "red", show.values = TRUE, value.offset = .3)
+
+# With covariates
+Load_Incong_Cov <- glm(Noticing_Critic ~ Load_C + PrimaryTask_C + ErrorRate_TrialCritic, family ="binomial", data = df_Load_Incongruent)
+summary(Load_Incong_Cov)
+odds.ratio(Load_Incong_Cov) # Calculate ODD RATIO of the model
+
+Report_Load_Incong_Cov <- summary(Load_Incong_Cov)
+Coef_Load_Incong_Cov <- summary(Load_Incong_Cov)[[12]]
+
+
+```
+
+Compare conditions 2 by 2 using a Tukey HSD
+
+```{r Tukey-Incongruent}
+
+## Run an ANOVA comparing different load conditions
+ANOVA_Incongruent <- aov(Noticing_Critic ~ Load_str, data = df_Load_Incongruent)
+summary(ANOVA_Incongruent)
+
+Report_ANOVA_Incongruent <- summary(ANOVA_Incongruent)
+
+# Run Tukey HSD to compare each load conditions to others
+TukeyHSD(ANOVA_Incongruent, conf.level=.95)
+
+Report_TukeyHSD_Incongruent <- TukeyHSD(ANOVA_Incongruent, conf.level=.95)
 
 
 ```
 
 
-## For the relevant conditions
 
-```{r Main analysis2}
+### Congruent Unexpected Element
 
-Reg_Relevant <- glm(Noticing_Critic ~ Chooserandom_Condition, family ="binomial", data = tmp_Relevant)
-summary(Reg_Relevant)
-rsq.partial(Reg_Relevant) # Calculate R² 
-odds.ratio(Reg_Relevant)
+Test the linear prediction of perceptual load : the increasing of perceptual load leads to a decreasing in noticing rate of the congruent unexpected element
+
+```{r Load-Effect-Congruent}
+
+Load_Cong <- glm(Noticing_Critic ~ Load_C, family ="binomial", data = df_Load_Congruent)
+summary(Load_Cong)
+
+Report_Load_Cong <- summary(Load_Cong)
+
+# Load_Cong_str <- glm(Noticing_Critic ~ Load_str, family ="binomial", data = df_Load_Congruent)
+# plot_model(Load_Cong_str, vline.color = "red", show.values = TRUE, value.offset = .3)
+
+# With covariates
+Load_Cong_Cov <- glm(Noticing_Critic ~ Load_C + PrimaryTask_C + ErrorRate_TrialCritic, family ="binomial", data = df_Load_Congruent)
+summary(Load_Cong_Cov)
+odds.ratio(Load_Cong_Cov) # Calculate ODD RATIO of the model
+
+Report_Load_Cong_Cov <- summary(Load_Cong_Cov)
+Coef_Load_Cong_Cov <- summary(Load_Cong_Cov)[[12]]
+
+
+```
+
+Compare conditions 2 by 2 using a Tukey HSD
+
+```{r Tukey-Congruent}
+
+## Run an ANOVA comparing different load conditions
+ANOVA_Congruent <- aov(Noticing_Critic ~ Load_str, data = df_Load_Congruent)
+summary(ANOVA_Congruent)
+
+Report_ANOVA_Congruent <- summary(ANOVA_Congruent)
+
+# Run Tukey HSD to compare each load conditions to others
+TukeyHSD(ANOVA_Congruent, conf.level=.95)
+
+Report_TukeyHSD_Congruent <- TukeyHSD(ANOVA_Congruent, conf.level=.95)
+
+
+```
+
+### Noticing Proportions
+
+```{r Proportions-Load-Effects}
+
+# Proportion of Noticing
+
+## Incongruent Unexpected Element
+Table_Load_Incong_Nb <- table(df_Load_Incongruent$Load_C, dnn = "Perceptual_Load")
+
+Table_Load_NoticingCritic_Incong_Nb <- table(df_Load_Incongruent$Noticing_Critic_str, df_Load_Incongruent$Load_C, dnn = c("UE_Noticing", "Perceptual_Load"))
+
+Table_Load_NoticingCritic_Incong_Prop <- round(prop.table(table(df_Load_Incongruent$Noticing_Critic_str, df_Load_Incongruent$Load_C, dnn = c("UE_Noticing", "Perceptual_Load")), margin = 2), digits = 2)
+
+
+## Congruent Unexpected Element
+Table_Load_Cong_Nb <- table(df_Load_Congruent$Load_C, dnn = "Perceptual_Load")
+
+Table_Load_NoticingCritic_Cong_Nb <- table(df_Load_Congruent$Noticing_Critic_str, df_Load_Congruent$Load_C, dnn = c("UE_Noticing", "Perceptual_Load"))
+
+Table_Load_NoticingCritic_Cong_Prop <- round(prop.table(table(df_Load_Congruent$Noticing_Critic_str, df_Load_Congruent$Load_C, dnn = c("UE_Noticing", "Perceptual_Load")), margin = 2), digits = 2)
 
 ```
 
 
-## Graphique representation 
+### Graphic representation 
 
 ```{r}
 
-abs_Incong <- c(1,2,3,4) ; Ord_Incong <- c(.91, .39, .12, .13)
-plot(abs_Incong,Ord_Incong,type="o",col=2, lwd = 3, pch=16,  xlim = c(1, 9), xlab="Nombre de cibles/distracteurs",ylab="Taux de détection de l'élement inattendu")
-abs_Cong <- c(4,5,6,7,8) ; Ord_Cong <- c(.68, .69, .84, .76, .74)
-points(abs_Cong,Ord_Cong,type = "o", col=3, lwd = 3 ,pch=16)
-legend("bottomright",
-       legend = c("Stimulus inattendu non-pertinent", "Stimulus inattendu pertinent"),
-       bty = "n", # Removes the legend box
-       lty = c(1, 1),
-       col = c(2, 3),
-       lwd = 3, 
-       cex = 1.2)
+abs_Incong <- as.numeric(c(1,2,3,4)) 
+Ord_Incong <- as.numeric(c(Table_Load_NoticingCritic_Incong_Prop["Noticer", "1"], 
+                           Table_Load_NoticingCritic_Incong_Prop["Noticer", "2"], 
+                           Table_Load_NoticingCritic_Incong_Prop["Noticer", "3"], 
+                           Table_Load_NoticingCritic_Incong_Prop["Noticer", "4"]))
+
+abs_Cong <- as.numeric(c(4,5,6,7,8)) 
+Ord_Cong <- as.numeric(c(Table_Load_NoticingCritic_Cong_Prop["Noticer", "4"],
+                         Table_Load_NoticingCritic_Cong_Prop["Noticer", "5"],
+                         Table_Load_NoticingCritic_Cong_Prop["Noticer", "6"],
+                         Table_Load_NoticingCritic_Cong_Prop["Noticer", "7"],
+                         Table_Load_NoticingCritic_Cong_Prop["Noticer", "8"]))
 
 
-```
-
-
-
-## Relevance effect in the condition with 4 targets and 4 distractors
-
-```{r Relevance effect}
-
-df_Condition_4 <- df %>%
-  filter(Chooserandom_Condition == 4.1 | Chooserandom_Condition == 4.2) %>%
-  mutate(UE_Relevance_str = case_when(Chooserandom_Condition == 4.1 ~ "Irrelevant", 
-                                      Chooserandom_Condition == 4.2 ~ "Relevant")) %>%
-  mutate(UE_Relevance = case_when(Chooserandom_Condition == 4.1 ~ -0.5, 
-                                      Chooserandom_Condition == 4.2 ~ +0.5))
+plot(abs_Incong,Ord_Incong,type="o",col=2, lwd = 3, pch=16, xlim = c(1, 9), xlab="Nombre de cibles/distracteurs",ylab="Taux de détection de l'élement inattendu") +
   
-Relevance_Condition_4 <- glm(Noticing_Critic ~ UE_Relevance, family = "binomial", data = df_Condition_4)
-summary(Relevance_Condition_4)
-odds.ratio(Relevance_Condition_4)
+  points(abs_Cong,Ord_Cong,type = "o", col=3, lwd = 3 ,pch=16) 
 
-plot_model(Relevance_Condition_4, type = "pred", terms = "UE_Relevance")
-table(df_Condition_4$Noticing_Critic, df_Condition_4$UE_Relevance_str)
-
+legend("bottomright",
+         legend = c("Stimulus inattendu non-pertinent", "Stimulus inattendu pertinent"),
+         bty = "n", # Removes the legend box
+         lty = c(1, 1),
+         col = c(2, 3),
+         lwd = 3, 
+         cex = 1.2)
 
 ```
 
@@ -140,101 +327,203 @@ table(df_Condition_4$Noticing_Critic, df_Condition_4$UE_Relevance_str)
 
 ## Anxiety effect
 
-```{r Anxiety effect}
+### Incongruent Unexpected Element
 
-Reg_Anxiety_Irrelevant <- glm(Noticing_Critic ~ Fear_Score, family ="binomial", data = tmp_Irrelevant)
-summary(Reg_Anxiety_Irrelevant)
-rsq.partial(Reg_Anxiety_Irrelevant)
-odds.ratio(Reg_Anxiety_Irrelevant)
+Test if self-reported anxiety (after the IB task) predict noticing rate of the Incongruent UE
 
-Reg_Anxiety_Load_Irrelevant <- lm(Fear_Score ~ Chooserandom_Condition, data = tmp_Irrelevant)
-summary(Reg_Anxiety_Load_Irrelevant)
-rsq.partial(Reg_Anxiety_Load_Irrelevant)
+```{r Anxiety-Effect-Incongruent}
 
-# Cette analyse est intéressante : l'effet de l'anxiété auto-rapportée durant l'expérience quand on contrôle l'effet du stress dû à la difficulté de la tâche :
-# Reg_Anxiety_Irrelevant <- glm(Noticing_Critic ~ Fear_Score+Chooserandom_Condition, family ="binomial", data = tmp_Irrelevant)
-# summary(Reg_Anxiety_Irrelevant)
-# rsq.partial(Reg_Anxiety_Irrelevant)
-# odds.ratio(Reg_Anxiety_Irrelevant)
+Load_Anxiety_Incongruent <- glm(Noticing_Critic ~ FearScore, family ="binomial", data = df_Load_Incongruent)
+summary(Load_Anxiety_Incongruent)
+odds.ratio(Load_Anxiety_Incongruent)
 
-warning("Dans l'expérience avec les deux éléments inattendus, lorsque j'ai testé l'effet de la peur ressentie sur la détection, je crois que je l'ai fait de manière indifférenciée pour tout les éléments inattendus alors qu'en réalité je dois le faire lorsque l'élément inattendu est incongruent puis lorsque l'élément inattendu est congruent !")
+Report_Load_Anxiety_Incongruent <- summary(Load_Anxiety_Incongruent)
 
+# Test if perceptual load predicts self-reported anxiety
+Anxiety_by_Load_Incongruent <- lm(FearScore ~ Load_C, data = df_Load_Incongruent)
+summary(Anxiety_by_Load_Incongruent)
+rsq.partial(Anxiety_by_Load_Incongruent)
+
+Report_Anxiety_by_Load_Incongruent <- summary(Anxiety_by_Load_Incongruent)
+plot_model(Anxiety_by_Load_Incongruent, type = "slope")
+
+# Given that Perceptual load predict self reported anxiety, we run an extra analysis to predict Noticing rate by Anxiety, controlling for perceptual load
+
+Load_Anxiety_Incongruent_Cov <- glm(Noticing_Critic ~ FearScore + Load_C + PrimaryTask_C + ErrorRate_TrialCritic, family ="binomial", data = df_Load_Incongruent)
+summary(Load_Anxiety_Incongruent_Cov)
+odds.ratio(Load_Anxiety_Incongruent_Cov)
+
+Report_Load_Anxiety_Incongruent_Cov <- summary(Load_Anxiety_Incongruent_Cov)
+
+
+```
+
+### Congruent Unexpected Element
+
+Test if self-reported anxiety (after the IB task) predict noticing rate of the Congruent UE
+
+```{r Anxiety-Effect-Incongruent}
+
+Load_Anxiety_Congruent <- glm(Noticing_Critic ~ FearScore, family ="binomial", data = df_Load_Congruent)
+summary(Load_Anxiety_Congruent)
+odds.ratio(Load_Anxiety_Congruent)
+
+Report_Load_Anxiety_Congruent <- summary(Load_Anxiety_Congruent)
+
+
+# Test if perceptual load predicts self-reported anxiety
+Anxiety_by_Load_Congruent <- lm(FearScore ~ Load_C, data = df_Load_Congruent)
+summary(Anxiety_by_Load_Congruent)
+rsq.partial(Anxiety_by_Load_Congruent)
+
+Report_Anxiety_by_Load_Congruent <- summary(Anxiety_by_Load_Congruent)
+plot_model(Anxiety_by_Load_Congruent, type = "slope")
+
+# For participants in conditions of congruent unexpected element, Anxiety is not predicted by perceptual load. However, we still test the effect of anxiety on noticing, controlling for perceptual load. 
+
+Load_Anxiety_Congruent_Cov <- glm(Noticing_Critic ~ FearScore + Load_C + PrimaryTask_C + ErrorRate_TrialCritic, family ="binomial", data = df_Load_Congruent)
+summary(Load_Anxiety_Congruent_Cov)
+odds.ratio(Load_Anxiety_Congruent_Cov)
+
+Report_Load_Anxiety_Congruent_Cov <- summary(Load_Anxiety_Congruent_Cov)
+
+```
+
+
+## Table of Noticing rates
+
+```{r Noticing-Rate-Table}
+
+# Build a new dataframe wchich contain all noticing rates from each condition
+
+## Build primary dataframes
+
+### Anxiety by perceptual load conditions
+Table_Load_Anxiety <- df_Load %>%
+  group_by(Load_str) %>%
+  summarise_at(vars(FearScore), list(Score_Anxiety = mean, SD_Anxiety = sd)) %>%
+  rename(Perceptual_Load = Load_str)
+
+### Noticing numbers by perceptual load conditions
+Table_Load_NoticingCritic_Nb <- as.data.frame.matrix(table(df_Load$Load_str, 
+                                                           df_Load$Noticing_Critic_str, 
+                                                           dnn = c("Perceptual_Load", "UE_Noticing")))
+
+### Noticing rates by perceptual load conditions
+Table_Load_NoticingCritic_Prop <- as.data.frame.matrix(round(prop.table(table(df_Load$Load_str, 
+                                                 df_Load$Noticing_Critic_str, 
+                                                 dnn = c("Perceptual_Load", "UE_Noticing")), 
+                                           margin = 1), digits = 2))
+
+
+## Add relevant variables
+Table_Load_NoticingCritic_Nb <- Table_Load_NoticingCritic_Nb %>%
+  tibble::rownames_to_column("Perceptual_Load") %>%
+  rename(NonNoticer_Nb = NonNoticer) %>%
+  rename(Noticer_Nb = Noticer) %>%
+  mutate(Ppt_Nb = (NonNoticer_Nb + Noticer_Nb))
+
+Table_Load_NoticingCritic_Prop <- Table_Load_NoticingCritic_Prop %>%
+  tibble::rownames_to_column("Perceptual_Load") %>%
+  rename(IB_Rate = NonNoticer) %>%
+  rename(Detection_Rate = Noticer) %>%
+  mutate(Congruency = case_when(Perceptual_Load == "One" | 
+                                  Perceptual_Load == "Two" | 
+                                  Perceptual_Load == "Three" | 
+                                  Perceptual_Load == "Four_Incong" ~ "Incongruent", 
+                                
+                                Perceptual_Load == "Four_Cong" | 
+                                  Perceptual_Load == "Five" | 
+                                  Perceptual_Load == "Six" | 
+                                  Perceptual_Load == "Seven" | 
+                                  Perceptual_Load == "Eight" ~ "Congruent"))
+
+
+## Join dataframes
+Table_Load_NoticingCritic <- left_join(Table_Load_NoticingCritic_Nb, Table_Load_NoticingCritic_Prop, by = "Perceptual_Load")
+
+Table_Load_NoticingCritic <- left_join(Table_Load_NoticingCritic, Table_Load_Anxiety, by = "Perceptual_Load")
   
-
-Reg_Anxiety_Relevant <- glm(Noticing_Critic ~ Fear_Score, family ="binomial", data = tmp_Relevant)
-summary(Reg_Anxiety_Relevant)
-odds.ratio(Reg_Anxiety_Relevant)
-
-Reg_Anxiety_Load_Relevant <- lm(Fear_Score ~ Chooserandom_Condition, data = tmp_Relevant)
-summary(Reg_Anxiety_Load_Relevant)
-rsq.partial(Reg_Anxiety_Load_Relevant)
+## Reorganise the perceptual load variable
+Table_Load_NoticingCritic <- Table_Load_NoticingCritic %>%
+  mutate(Perceptual_Load = case_when(Perceptual_Load == "One" ~ 1,
+                                Perceptual_Load == "Two" ~ 2,  
+                                Perceptual_Load == "Three" ~ 3, 
+                                Perceptual_Load == "Four_Incong" ~ 4, 
+                                
+                                Perceptual_Load == "Four_Cong" ~ 4, 
+                                Perceptual_Load == "Five" ~ 5, 
+                                Perceptual_Load == "Six" ~ 6, 
+                                Perceptual_Load == "Seven" ~ 7, 
+                                Perceptual_Load == "Eight" ~ 8)) %>%
+  arrange(Perceptual_Load, desc(Congruency)) %>%
+  select(Congruency, Perceptual_Load, Ppt_Nb, everything())
+  
+print(Table_Load_NoticingCritic)
+         
+       
 ```
 
-## Equivalence testing
+## Equivalence testing 
 
-```{r Equivalence testing}
-table(tmp_Relevant$Chooserandom_Condition)
-table(tmp_Relevant$Noticing_Critic, tmp_Relevant$Chooserandom_Condition)
-Prop_Detect_Relevant <- matrix(table(tmp_Relevant$Noticing_Critic, tmp_Relevant$Chooserandom_Condition),nrow = 2,ncol = 5)
-chisq.test(Prop_Detect_Relevant) # To report results : X?(df, N) = (X? Value), p = (p-value)
-SetEffect2<- t(Prop_Detect_Relevant)#Rotating my contingency table
-chisq.test(Prop_Detect_Relevant) # If the Chi? is significant, it means that my two variables (congruency and Detection) are dependant : The level of detection is statistically moderate by the congruency of the unexpected element
+```{r Equivalence-testing}
 
-
-
-Prop_IB <-  as.data.frame(matrix(table(tmp$Chooserandom_Condition, tmp$Noticing_Critic),nrow = 9,ncol = 2))
-
-names(Prop_IB)[1] <- "No_Noticing_Nb"
-names(Prop_IB)[2] <- "Noticing_Nb"
-
-Prop_IB <- Prop_IB %>%
-  mutate(Condition_Nb = (No_Noticing_Nb+Noticing_Nb))
-
-Prop_IB <- Prop_IB %>%
-  mutate(IB_Prop = No_Noticing_Nb / Condition_Nb)
-
-Prop_IB <- Prop_IB %>%
-  mutate(Detection_Prop = Noticing_Nb / Condition_Nb)
-
-warning("It could be interesting to add the number of stimuli by condition to this table")
+# Between condition '4' and '6'
+TOSTtwo.prop(alpha = .05, 
+             prop1 = Table_Load_NoticingCritic[5, "Detection_Rate"], 
+             prop2 = Table_Load_NoticingCritic[7, "Detection_Rate"], 
+             n1 = Table_Load_NoticingCritic[5, "Ppt_Nb"], 
+             n2 = Table_Load_NoticingCritic[7, "Ppt_Nb"], 
+             low_eqbound = -.21, 
+             high_eqbound = .21)
+## All conditions are equivalent two-by-two except for the conditions 4 with 6 and for the conditions 5 with 6.
 
 
-# Between condition '4' and '8'
-TOSTtwo.prop(alpha = .05, prop1 = .68, prop2 = .744, n1 = 75, n2 = 78, low_eqbound = -.21, high_eqbound = .21)
-
-
-# Between condition '4' and '7'
-TOSTtwo.prop(alpha = .05, prop1 = .68, prop2 = .76, n1 = 75, n2 = 75, low_eqbound = -.21, high_eqbound = .21)
-
+# Between condition '3' and '4'
+TOSTtwo.prop(alpha = .05, 
+             prop1 = Table_Load_NoticingCritic[3, "Detection_Rate"], 
+             prop2 = Table_Load_NoticingCritic[4, "Detection_Rate"], 
+             n1 = Table_Load_NoticingCritic[3, "Ppt_Nb"], 
+             n2 = Table_Load_NoticingCritic[4, "Ppt_Nb"], 
+             low_eqbound = -.21, 
+             high_eqbound = .21)
+## Condition 3 and 4 are equivalent, whereas other condition are significantly different two by two
 
 ```
 
-# Mess: Task difficulty analysis
 
-```{r Other1}
+## Effect of primary task on noticing
 
-tmp_Load4 <- tmp %>%
-  filter(Chooserandom_Condition==4.2)
+```{r Primary-task-effect}
 
-tmp_Load5 <- tmp %>%
-  filter(Chooserandom_Condition==5)
+# Effect of noticing on primary task errors
+Load_Primary <- lm(ErrorRate_TrialCritic ~ Noticing_Critic, data = df_Load)
+summary(Load_Primary)
 
-tmp_Load6 <- tmp %>%
-  filter(Chooserandom_Condition==6)
+# With Covariates
+Load_Primary_Cov <- lm(ErrorRate_TrialCritic ~ Noticing_Critic + Load_C + Congruency_C, data = df_Load)
+summary(Load_Primary_Cov)
 
-tmp_Load7 <- tmp %>%
-  filter(Chooserandom_Condition==7)
 
-tmp_Load8 <- tmp %>%
-  filter(Chooserandom_Condition==8)
+# Effect of noticing on primary task errors
+Load_Primary_Noticing <- glm(Noticing_Critic  ~ ErrorRate_TrialCritic , family = "binomial", data = df_Load)
+summary(Load_Primary_Noticing)
 
-summary(tmp_Load4$Trial_Critic)
-summary(tmp_Load5$Trial_Critic)
-summary(tmp_Load6$Trial_Critic)
-summary(tmp_Load7$Trial_Critic)
-summary(tmp_Load8$Trial_Critic)
-
+# With Covariates
+Load_Primary_Noticing_Cov <- glm(Noticing_Critic  ~ ErrorRate_TrialCritic + Load_C + Congruency_C , family = "binomial", data = df_Load)
+summary(Load_Primary_Noticing_Cov)
 
 
 ```
 
+
+# Savings
+
+```{r Saving environment, eval = FALSE}
+
+save.image("~/Psycho/Doctorat_Clermont/Procedures_ExP/IB_Perceptual_Load/Perceptual-Load-and-Inattentional-Blindness/Environment_saving/Analysis_IB_Load_2024-12-31.RData")
+
+save.image("~/Psycho/Doctorat_Clermont/Ecriture de These/Chaptitres/Thesis_Bookdown/EnvironmentSaving/Part2_IB_Calibration/Analysis_IB_Load_2024-12-31.RData")
+
+
+```
