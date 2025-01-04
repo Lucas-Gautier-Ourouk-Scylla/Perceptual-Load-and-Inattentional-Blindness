@@ -25,20 +25,6 @@ Initial_data_Load <- read_csv("Transformed_Data/Dataset_Final_IB_Load.csv")%>%
 
 ```
 
-
-Anticipation de suppressions de pptEs selon la préregistration: 
-- Supprimer les pptEs qui connaissent le paradigme (mais analyses avec et sans)
-- Garder les pptEs sur le full trial mais analyses avec et sans 
-- Supprimer si les erreurs sur tâche de comptage > 3 MAD
-- Supprimer outlier (Cook, levier, residual distance)
-
-
-table(tmp$KnewTask, tmp$Noticing_Critic)
-324/(237+324)
-81/(54+81)
-It seems there is no difference in the detection rate for participants that had already done such an experiment and the others who did not
-=> So we decided to keep these participants in our analyses.
-
 # Data exclusion
 
 ```{r Participant removing, include = FALSE}
@@ -122,6 +108,37 @@ df_Load_Congruent <- df_Load %>%
 
 
 # Main analyses
+
+## Manip Check 
+
+Here we test if the perceptual load manipulation leads to an increasing of tak difficulty, measured as the number of error on the primary task
+
+```{r Load-Effect-On-Performance}
+
+Load_Performance <- lm(ErrorRate_Trial1 ~ Load_C, data = df_Load)
+summary(Load_Performance)
+rsq(Load_Performance)
+
+Report_Load_Performance <- summary(Load_Performance)
+
+
+# Within Incongruent conditions
+Load_Performance_Incong <- lm(ErrorRate_Trial1 ~ Load_C, data = df_Load_Incongruent)
+summary(Load_Performance_Incong)
+rsq(Load_Performance_Incong)
+
+Report_Load_Performance_Incong <- summary(Load_Performance_Incong)
+
+
+# Within Congruent conditions
+Load_Performance_Cong <- lm(ErrorRate_Trial1 ~ Load_C, data = df_Load_Congruent)
+summary(Load_Performance_Cong)
+rsq(Load_Performance_Cong)
+
+Report_Load_Performance_Cong <- summary(Load_Performance_Cong)
+
+```
+
 
 ## Attentional Set effect
 
@@ -292,7 +309,7 @@ Table_Load_NoticingCritic_Cong_Prop <- round(prop.table(table(df_Load_Congruent$
 
 ### Graphic representation 
 
-```{r}
+```{r Graph-Load-Effects}
 
 abs_Incong <- as.numeric(c(1,2,3,4)) 
 Ord_Incong <- as.numeric(c(Table_Load_NoticingCritic_Incong_Prop["Noticer", "1"], 
@@ -338,6 +355,8 @@ summary(Load_Anxiety_Incongruent)
 odds.ratio(Load_Anxiety_Incongruent)
 
 Report_Load_Anxiety_Incongruent <- summary(Load_Anxiety_Incongruent)
+Coef_Load_Anxiety_Incongruent <- summary(Load_Anxiety_Incongruent)[[12]]
+
 
 # Test if perceptual load predicts self-reported anxiety
 Anxiety_by_Load_Incongruent <- lm(FearScore ~ Load_C, data = df_Load_Incongruent)
@@ -354,6 +373,7 @@ summary(Load_Anxiety_Incongruent_Cov)
 odds.ratio(Load_Anxiety_Incongruent_Cov)
 
 Report_Load_Anxiety_Incongruent_Cov <- summary(Load_Anxiety_Incongruent_Cov)
+Coef_Load_Anxiety_Incongruent_Cov <- summary(Load_Anxiety_Incongruent_Cov)[[12]]
 
 
 ```
@@ -369,6 +389,7 @@ summary(Load_Anxiety_Congruent)
 odds.ratio(Load_Anxiety_Congruent)
 
 Report_Load_Anxiety_Congruent <- summary(Load_Anxiety_Congruent)
+Coef_Load_Anxiety_Congruent <- summary(Load_Anxiety_Congruent)[[12]]
 
 
 # Test if perceptual load predicts self-reported anxiety
@@ -386,6 +407,7 @@ summary(Load_Anxiety_Congruent_Cov)
 odds.ratio(Load_Anxiety_Congruent_Cov)
 
 Report_Load_Anxiety_Congruent_Cov <- summary(Load_Anxiety_Congruent_Cov)
+Coef_Load_Anxiety_Congruent_Cov <- summary(Load_Anxiety_Congruent_Cov)[[12]]
 
 ```
 
@@ -468,26 +490,40 @@ print(Table_Load_NoticingCritic)
 
 ```{r Equivalence-testing}
 
+# For Congruent Conditions
+## All conditions are equivalent two-by-two except for the conditions 4 with 6 and for the conditions 5 with 6.
+
 # Between condition '4' and '6'
-TOSTtwo.prop(alpha = .05, 
+Load_TOST_4vs6 <- TOSTtwo.prop(alpha = .05, 
              prop1 = Table_Load_NoticingCritic[5, "Detection_Rate"], 
              prop2 = Table_Load_NoticingCritic[7, "Detection_Rate"], 
              n1 = Table_Load_NoticingCritic[5, "Ppt_Nb"], 
              n2 = Table_Load_NoticingCritic[7, "Ppt_Nb"], 
              low_eqbound = -.21, 
              high_eqbound = .21)
-## All conditions are equivalent two-by-two except for the conditions 4 with 6 and for the conditions 5 with 6.
 
+# Between condition '5' and '6'
+Load_TOST_5vs6 <- TOSTtwo.prop(alpha = .05, 
+             prop1 = Table_Load_NoticingCritic[6, "Detection_Rate"], 
+             prop2 = Table_Load_NoticingCritic[7, "Detection_Rate"], 
+             n1 = Table_Load_NoticingCritic[6, "Ppt_Nb"], 
+             n2 = Table_Load_NoticingCritic[7, "Ppt_Nb"], 
+             low_eqbound = -.21, 
+             high_eqbound = .21)
+
+
+# For Incongruent Conditions
+## Condition 3 and 4 are equivalent, whereas other condition are significantly different two by two
 
 # Between condition '3' and '4'
-TOSTtwo.prop(alpha = .05, 
+Load_TOST_3vs4 <- TOSTtwo.prop(alpha = .05, 
              prop1 = Table_Load_NoticingCritic[3, "Detection_Rate"], 
              prop2 = Table_Load_NoticingCritic[4, "Detection_Rate"], 
              n1 = Table_Load_NoticingCritic[3, "Ppt_Nb"], 
              n2 = Table_Load_NoticingCritic[4, "Ppt_Nb"], 
              low_eqbound = -.21, 
              high_eqbound = .21)
-## Condition 3 and 4 are equivalent, whereas other condition are significantly different two by two
+
 
 ```
 
