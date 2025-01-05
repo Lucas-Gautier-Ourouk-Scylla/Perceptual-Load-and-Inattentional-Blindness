@@ -330,7 +330,7 @@ plot(abs_Incong,Ord_Incong,type="o",col=2, lwd = 3, pch=16, xlim = c(1, 9), xlab
   points(abs_Cong,Ord_Cong,type = "o", col=3, lwd = 3 ,pch=16) 
 
 legend("bottomright",
-         legend = c("Stimulus inattendu non-pertinent", "Stimulus inattendu pertinent"),
+         legend = c("Stimulus inattendu incongruent", "Stimulus inattendu congruent"),
          bty = "n", # Removes the legend box
          lty = c(1, 1),
          col = c(2, 3),
@@ -382,7 +382,7 @@ Coef_Load_Anxiety_Incongruent_Cov <- summary(Load_Anxiety_Incongruent_Cov)[[12]]
 
 Test if self-reported anxiety (after the IB task) predict noticing rate of the Congruent UE
 
-```{r Anxiety-Effect-Incongruent}
+```{r Anxiety-Effect-Congruent}
 
 Load_Anxiety_Congruent <- glm(Noticing_Critic ~ FearScore, family ="binomial", data = df_Load_Congruent)
 summary(Load_Anxiety_Congruent)
@@ -414,7 +414,38 @@ Coef_Load_Anxiety_Congruent_Cov <- summary(Load_Anxiety_Congruent_Cov)[[12]]
 
 ## Table of Noticing rates
 
-```{r Noticing-Rate-Table}
+### Critical trial
+
+```{r Table-Noticing-Rate-Critic}
+
+
+
+
+```
+
+
+### Divided Attention trial
+
+```{r Table-Noticing-Rate-Divided}
+
+
+
+
+```
+
+
+### Full Attention trial
+
+```{r Table-Noticing-Rate-Full}
+
+
+
+
+```
+
+
+
+```{r Table-Noticing-Rate}
 
 # Build a new dataframe wchich contain all noticing rates from each condition
 
@@ -425,6 +456,7 @@ Table_Load_Anxiety <- df_Load %>%
   group_by(Load_str) %>%
   summarise_at(vars(FearScore), list(Score_Anxiety = mean, SD_Anxiety = sd)) %>%
   rename(Perceptual_Load = Load_str)
+
 
 ### Noticing numbers by perceptual load conditions
 Table_Load_NoticingCritic_Nb <- as.data.frame.matrix(table(df_Load$Load_str, 
@@ -464,7 +496,55 @@ Table_Load_NoticingCritic_Prop <- Table_Load_NoticingCritic_Prop %>%
 ## Join dataframes
 Table_Load_NoticingCritic <- left_join(Table_Load_NoticingCritic_Nb, Table_Load_NoticingCritic_Prop, by = "Perceptual_Load")
 
+
+## Divided attention trial
+
+### Noticing numbers by perceptual load conditions
+Table_Load_NoticingDivided_Nb <- as.data.frame.matrix(table(df_Load$Load_str, 
+                                                           df_Load$Noticing_Divided_str, 
+                                                           dnn = c("Perceptual_Load", "UE_Noticing")))
+
+### Noticing rates by perceptual load conditions
+Table_Load_NoticingDivided_Prop <- as.data.frame.matrix(round(prop.table(table(df_Load$Load_str, 
+                                                 df_Load$Noticing_Divided_str, 
+                                                 dnn = c("Perceptual_Load", "UE_Noticing")), 
+                                           margin = 1), digits = 2))
+## Add relevant variables
+Table_Load_NoticingDivided_Prop <- Table_Load_NoticingDivided_Prop %>%
+  tibble::rownames_to_column("Perceptual_Load") %>%
+  rename(IB_Rate_Divided = NonNoticer) %>%
+  rename(Detection_Rate_Divided = Noticer)
+
+## Join dataframes
+Table_Load_NoticingCritic <- left_join(Table_Load_NoticingCritic, Table_Load_NoticingDivided_Prop, by = "Perceptual_Load")
+
+
+
+## Full attention trial
+
+### Noticing numbers by perceptual load conditions
+Table_Load_NoticingFull_Nb <- as.data.frame.matrix(table(df_Load$Load_str, 
+                                                           df_Load$Noticing_Full_str, 
+                                                           dnn = c("Perceptual_Load", "UE_Noticing")))
+
+### Noticing rates by perceptual load conditions
+Table_Load_NoticingFull_Prop <- as.data.frame.matrix(round(prop.table(table(df_Load$Load_str, 
+                                                 df_Load$Noticing_Full_str, 
+                                                 dnn = c("Perceptual_Load", "UE_Noticing")), 
+                                           margin = 1), digits = 2))
+
+## Add relevant variables
+Table_Load_NoticingFull_Prop <- Table_Load_NoticingFull_Prop %>%
+  tibble::rownames_to_column("Perceptual_Load") %>%
+  rename(IB_Rate_Full = NonNoticer) %>%
+  rename(Detection_Rate_Full = Noticer)
+
+## Join dataframes
+Table_Load_NoticingCritic <- left_join(Table_Load_NoticingCritic, Table_Load_NoticingFull_Prop, by = "Perceptual_Load")
+
+## Add anxiety scores
 Table_Load_NoticingCritic <- left_join(Table_Load_NoticingCritic, Table_Load_Anxiety, by = "Perceptual_Load")
+
   
 ## Reorganise the perceptual load variable
 Table_Load_NoticingCritic <- Table_Load_NoticingCritic %>%
@@ -479,7 +559,8 @@ Table_Load_NoticingCritic <- Table_Load_NoticingCritic %>%
                                 Perceptual_Load == "Seven" ~ 7, 
                                 Perceptual_Load == "Eight" ~ 8)) %>%
   arrange(Perceptual_Load, desc(Congruency)) %>%
-  select(Congruency, Perceptual_Load, Ppt_Nb, everything())
+  select(Congruency, Perceptual_Load, Ppt_Nb, everything()) %>%
+  select(-IB_Rate_Divided, -IB_Rate_Full)
   
 print(Table_Load_NoticingCritic)
          
