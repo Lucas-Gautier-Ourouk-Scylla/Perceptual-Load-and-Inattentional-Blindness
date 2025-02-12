@@ -166,6 +166,11 @@ Attention Trial
 ErrorRate_TrialDivided: Error Rate for the divided trial
 
 
+Error_Mean: The mean of absolute errors for trials 2, 3, 4, critic and Divided (In this calculations, we excluded the trial 1, since it was a training trial)
+
+ErrorRate_Mean: The mean of error rates for trials 2, 3, 4, critic and Divided (In this calculations, we excluded the trial 1, since it was a training trial)
+
+
 ### Anxiety scale 
 
 Participants answers on the anxiety scale after the IB task:
@@ -754,6 +759,7 @@ We also add a global accuracy score which is the mean of the trials : 2, 3, 4, c
 
 tmp <- df
 
+# Trial 1
 tmp <- tmp %>% 
   mutate(Error_Trial1 = case_when((Chooserandom_Instruction==2 & Chooserandom_Condition==1)~ abs(Count_Trial1-6),
                                   (Chooserandom_Instruction==1 & Chooserandom_Condition==1)~ abs(Count_Trial1-5),
@@ -791,9 +797,93 @@ tmp <- tmp %>%
                                   (Chooserandom_Instruction==2 & Chooserandom_Condition==7)~ abs(Count_Trial1-36)/36,
                                   (Chooserandom_Instruction==1 & Chooserandom_Condition==7)~ abs(Count_Trial1-38)/38,
                                   (Chooserandom_Instruction==2 & Chooserandom_Condition==8)~ abs(Count_Trial1-41)/41,
-                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==8)~ abs(Count_Trial1-46)/46))  %>%
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==8)~ abs(Count_Trial1-46)/46))
+
+
+# Trial 2
+tmp <- tmp %>% 
+  mutate(Error_Trial2 = case_when((Chooserandom_Instruction==2 & Chooserandom_Condition==1)~ abs(Count_Trial2-5),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==1)~ abs(Count_Trial2-6),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==2)~ abs(Count_Trial2-12),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==2)~ abs(Count_Trial2-11),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==3)~ abs(Count_Trial2-12),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==3)~ abs(Count_Trial2-16),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==41)~ abs(Count_Trial2-23),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==41)~ abs(Count_Trial2-22),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==42)~ abs(Count_Trial2-23),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==42)~ abs(Count_Trial2-22),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==5)~ abs(Count_Trial2-28),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==5)~ abs(Count_Trial2-27),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==6)~ abs(Count_Trial2-28),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==6)~ abs(Count_Trial2-29),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==7)~ abs(Count_Trial2-37),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==7)~ abs(Count_Trial2-37),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==8)~ abs(Count_Trial2-46),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==8)~ abs(Count_Trial2-47))) %>% 
   
+  mutate(ErrorRate_Trial2 = case_when((Chooserandom_Instruction==2 & Chooserandom_Condition==1)~ abs(Count_Trial2-5)/5,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==1)~ abs(Count_Trial2-6)/6,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==2)~ abs(Count_Trial2-12)/12,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==2)~ abs(Count_Trial2-11)/11,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==3)~ abs(Count_Trial2-12)/12,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==3)~ abs(Count_Trial2-16)/16,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==41)~ abs(Count_Trial2-23)/23,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==41)~ abs(Count_Trial2-22)/22,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==42)~ abs(Count_Trial2-23)/23,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==42)~ abs(Count_Trial2-22)/22,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==5)~ abs(Count_Trial2-28)/28,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==5)~ abs(Count_Trial2-27)/27,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==6)~ abs(Count_Trial2-28)/28,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==6)~ abs(Count_Trial2-29)/29,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==7)~ abs(Count_Trial2-37)/37,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==7)~ abs(Count_Trial2-37)/37,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==8)~ abs(Count_Trial2-46)/46,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==8)~ abs(Count_Trial2-47)/47))
+
+
+# Trial 3
+tmp <- tmp %>% 
+  mutate(Error_Trial3 = case_when((Chooserandom_Instruction==2 & Chooserandom_Condition==1)~ abs(Count_Trial3-6),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==1)~ abs(Count_Trial3-6),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==2)~ abs(Count_Trial3-10),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==2)~ abs(Count_Trial3-11),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==3)~ abs(Count_Trial3-15),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==3)~ abs(Count_Trial3-17),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==41)~ abs(Count_Trial3-21),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==41)~ abs(Count_Trial3-25),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==42)~ abs(Count_Trial3-21),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==42)~ abs(Count_Trial3-25),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==5)~ abs(Count_Trial3-26),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==5)~ abs(Count_Trial3-26),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==6)~ abs(Count_Trial3-35),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==6)~ abs(Count_Trial3-33),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==7)~ abs(Count_Trial3-40),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==7)~ abs(Count_Trial3-38),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==8)~ abs(Count_Trial3-45),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==8)~ abs(Count_Trial3-44))) %>% 
   
+  mutate(ErrorRate_Trial3 = case_when((Chooserandom_Instruction==2 & Chooserandom_Condition==1)~ abs(Count_Trial3-6)/6,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==1)~ abs(Count_Trial3-6)/6,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==2)~ abs(Count_Trial3-10)/10,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==2)~ abs(Count_Trial3-11)/11,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==3)~ abs(Count_Trial3-15)/15,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==3)~ abs(Count_Trial3-17)/17,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==41)~ abs(Count_Trial3-21)/21,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==41)~ abs(Count_Trial3-25)/25,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==42)~ abs(Count_Trial3-21)/21,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==42)~ abs(Count_Trial3-25)/25,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==5)~ abs(Count_Trial3-26)/26,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==5)~ abs(Count_Trial3-26)/26,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==6)~ abs(Count_Trial3-35)/35,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==6)~ abs(Count_Trial3-33)/33,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==7)~ abs(Count_Trial3-40)/40,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==7)~ abs(Count_Trial3-38)/38,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==8)~ abs(Count_Trial3-45)/45,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==8)~ abs(Count_Trial3-44)/44))
+
+
+# Trial Critic
+tmp <- tmp %>%   
   mutate(Error_TrialCritic = case_when((Chooserandom_Instruction==2 & Chooserandom_Condition==1)~ abs(Count_TrialCritical-6),
                                   (Chooserandom_Instruction==1 & Chooserandom_Condition==1)~ abs(Count_TrialCritical-6),
                                   (Chooserandom_Instruction==2 & Chooserandom_Condition==2)~ abs(Count_TrialCritical-14),
@@ -833,8 +923,96 @@ tmp <- tmp %>%
                                   (Chooserandom_Instruction==1 & Chooserandom_Condition==8)~ abs(Count_TrialCritical-42)/42))
 
 
-warning("In this part, I do not calculate the error and error rates for trial 2, trial 3, trial 4, and trial divided. The number of bounces counting are listed in a notebook")
+# Trial 4
+tmp <- tmp %>% 
+  mutate(Error_Trial4 = case_when((Chooserandom_Instruction==2 & Chooserandom_Condition==1)~ abs(Count_Trial4-5),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==1)~ abs(Count_Trial4-6),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==2)~ abs(Count_Trial4-10),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==2)~ abs(Count_Trial4-10),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==3)~ abs(Count_Trial4-17),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==3)~ abs(Count_Trial4-15),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==41)~ abs(Count_Trial4-21),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==41)~ abs(Count_Trial4-22),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==42)~ abs(Count_Trial4-21),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==42)~ abs(Count_Trial4-22),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==5)~ abs(Count_Trial4-26),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==5)~ abs(Count_Trial4-27),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==6)~ abs(Count_Trial4-35),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==6)~ abs(Count_Trial4-33),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==7)~ abs(Count_Trial4-39),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==7)~ abs(Count_Trial4-39),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==8)~ abs(Count_Trial4-46),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==8)~ abs(Count_Trial4-42))) %>% 
+  
+  mutate(ErrorRate_Trial4 = case_when((Chooserandom_Instruction==2 & Chooserandom_Condition==1)~ abs(Count_Trial4-5)/5,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==1)~ abs(Count_Trial4-6)/6,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==2)~ abs(Count_Trial4-10)/10,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==2)~ abs(Count_Trial4-10)/10,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==3)~ abs(Count_Trial4-17)/17,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==3)~ abs(Count_Trial4-15)/15,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==41)~ abs(Count_Trial4-21)/21,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==41)~ abs(Count_Trial4-22)/22,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==42)~ abs(Count_Trial4-21)/21,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==42)~ abs(Count_Trial4-22)/22,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==5)~ abs(Count_Trial4-26)/26,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==5)~ abs(Count_Trial4-27)/27,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==6)~ abs(Count_Trial4-35)/35,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==6)~ abs(Count_Trial4-33)/33,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==7)~ abs(Count_Trial4-39)/39,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==7)~ abs(Count_Trial4-39)/39,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==8)~ abs(Count_Trial4-46)/46,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==8)~ abs(Count_Trial4-42)/42))
 
+
+# Trial Divided
+tmp <- tmp %>%   
+  mutate(Error_TrialDivided = case_when((Chooserandom_Instruction==2 & Chooserandom_Condition==1)~ abs(Count_TrialDivided-4),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==1)~ abs(Count_TrialDivided-6),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==2)~ abs(Count_TrialDivided-8),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==2)~ abs(Count_TrialDivided-8),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==3)~ abs(Count_TrialDivided-18),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==3)~ abs(Count_TrialDivided-13),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==41)~ abs(Count_TrialDivided-22),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==41)~ abs(Count_TrialDivided-23),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==42)~ abs(Count_TrialDivided-21),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==42)~ abs(Count_TrialDivided-23),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==5)~ abs(Count_TrialDivided-29),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==5)~ abs(Count_TrialDivided-27),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==6)~ abs(Count_TrialDivided-34),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==6)~ abs(Count_TrialDivided-32),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==7)~ abs(Count_TrialDivided-38),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==7)~ abs(Count_TrialDivided-40),
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==8)~ abs(Count_TrialDivided-43),
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==8)~ abs(Count_TrialDivided-41))) %>%
+  
+  mutate(ErrorRate_TrialDivided = case_when((Chooserandom_Instruction==2 & Chooserandom_Condition==1)~ abs(Count_TrialDivided-4)/4,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==1)~ abs(Count_TrialDivided-6)/6,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==2)~ abs(Count_TrialDivided-8)/8,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==2)~ abs(Count_TrialDivided-8)/8,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==3)~ abs(Count_TrialDivided-18)/18,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==3)~ abs(Count_TrialDivided-13)/13,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==41)~ abs(Count_TrialDivided-22)/22,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==41)~ abs(Count_TrialDivided-23)/23,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==42)~ abs(Count_TrialDivided-21)/21,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==42)~ abs(Count_TrialDivided-23)/23,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==5)~ abs(Count_TrialDivided-29)/29,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==5)~ abs(Count_TrialDivided-27)/27,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==6)~ abs(Count_TrialDivided-34)/34,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==6)~ abs(Count_TrialDivided-32)/32,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==7)~ abs(Count_TrialDivided-38)/38,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==7)~ abs(Count_TrialDivided-40)/40,
+                                  (Chooserandom_Instruction==2 & Chooserandom_Condition==8)~ abs(Count_TrialDivided-43)/43,
+                                  (Chooserandom_Instruction==1 & Chooserandom_Condition==8)~ abs(Count_TrialDivided-41)/41))
+
+
+# Calculate error mean for each participant
+tmp <- tmp %>%
+  mutate(Error_Mean = rowMeans(select(tmp,c(Error_Trial2, Error_Trial3, Error_TrialCritic, Error_Trial4, Error_TrialDivided)))) %>%
+  
+  mutate(ErrorRate_Mean = rowMeans(select(tmp,c(ErrorRate_Trial2, ErrorRate_Trial3, ErrorRate_TrialCritic, ErrorRate_Trial4, ErrorRate_TrialDivided))))
+  # In these calculations, we excluded the first trial (i.e., trial 1) since it was a training trial
+  
+  
 
 
 df <- tmp
@@ -989,9 +1167,10 @@ df_Final <- df %>%
          Knew, Knew_str, KnewTask, KnewTask_str, KnewIB, KnewIB_str,
          PrimaryTask_str, PrimaryTask_C, Congruency_str, Congruency_C, Load_str, Load_C,
          
-         Count_Trial1, Count_Trial2, Count_Trial3, Count_Trial4, Count_TrialCritical, Count_TrialDivided,
-         Error_Trial1, Error_TrialCritic,
-         ErrorRate_Trial1, ErrorRate_TrialCritic,
+         Count_Trial1, Count_Trial2, Count_Trial3, Count_TrialCritical, Count_Trial4, Count_TrialDivided,
+         Error_Trial1, Error_Trial2, Error_Trial3, Error_TrialCritic, Error_Trial4, Error_TrialDivided,
+         ErrorRate_Trial1, ErrorRate_Trial2, ErrorRate_Trial3, ErrorRate_TrialCritic, ErrorRate_Trial4, ErrorRate_TrialDivided,
+         Error_Mean, ErrorRate_Mean,
          
          IB_Critic:Motion_Full,
          Noticing_Critic, Noticing_Critic_str, Noticing_Divided, Noticing_Divided_str, Noticing_Full, Noticing_Full_str,

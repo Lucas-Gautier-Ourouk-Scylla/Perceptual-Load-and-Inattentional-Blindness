@@ -115,7 +115,7 @@ Here we test if the perceptual load manipulation leads to an increasing of tak d
 
 ```{r Load-Effect-On-Performance}
 
-Load_Performance <- lm(ErrorRate_Trial1 ~ Load_C, data = df_Load)
+Load_Performance <- lm(ErrorRate_Mean ~ Load_C, data = df_Load)
 summary(Load_Performance)
 rsq(Load_Performance)
 
@@ -123,7 +123,7 @@ Report_Load_Performance <- summary(Load_Performance)
 
 
 # Within Incongruent conditions
-Load_Performance_Incong <- lm(ErrorRate_Trial1 ~ Load_C, data = df_Load_Incongruent)
+Load_Performance_Incong <- lm(ErrorRate_Mean ~ Load_C, data = df_Load_Incongruent)
 summary(Load_Performance_Incong)
 rsq(Load_Performance_Incong)
 
@@ -131,7 +131,7 @@ Report_Load_Performance_Incong <- summary(Load_Performance_Incong)
 
 
 # Within Congruent conditions
-Load_Performance_Cong <- lm(ErrorRate_Trial1 ~ Load_C, data = df_Load_Congruent)
+Load_Performance_Cong <- lm(ErrorRate_Mean ~ Load_C, data = df_Load_Congruent)
 summary(Load_Performance_Cong)
 rsq(Load_Performance_Cong)
 
