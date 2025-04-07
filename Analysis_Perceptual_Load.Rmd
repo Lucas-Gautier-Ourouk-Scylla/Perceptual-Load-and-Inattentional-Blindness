@@ -50,7 +50,7 @@ tmp_Cong <- tmp %>%
   mutate(Mad_Cong = case_when(Congruency_str == "Congruent" & (ErrorRate_TrialCritic >= (median(ErrorRate_TrialCritic)+3*mad(ErrorRate_TrialCritic))) ~ "Out_Mad", 
                               Congruency_str == "Congruent" & (ErrorRate_TrialCritic <= (median(ErrorRate_TrialCritic)+3*mad(ErrorRate_TrialCritic))) ~ "In_Mad"))
 
-tmp <- combine(tmp_Cong, tmp_Incong) %>%
+tmp <- dplyr::combine(tmp_Cong, tmp_Incong) %>%
   mutate(Mad_Cong = ifelse(is.na(Mad_Cong), "Not_Concerned", Mad_Cong),
          Mad_Incong = ifelse(is.na(Mad_Incong), "Not_Concerned", Mad_Incong)) %>%
   filter(Mad_Cong == "In_Mad" | Mad_Incong == "In_Mad")
@@ -413,36 +413,6 @@ Coef_Load_Anxiety_Congruent_Cov <- summary(Load_Anxiety_Congruent_Cov)[[12]]
 
 
 ## Table of Noticing rates
-
-### Critical trial
-
-```{r Table-Noticing-Rate-Critic}
-
-
-
-
-```
-
-
-### Divided Attention trial
-
-```{r Table-Noticing-Rate-Divided}
-
-
-
-
-```
-
-
-### Full Attention trial
-
-```{r Table-Noticing-Rate-Full}
-
-
-
-
-```
-
 
 
 ```{r Table-Noticing-Rate}
